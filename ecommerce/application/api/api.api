@@ -1,0 +1,669 @@
+syntax = "v1"
+
+info (
+	title:   "E-commerce BFF API"
+	desc:    "Backend-for-Frontend (BFF) API for the e-commerce platform."
+	author:  "fyerfyer"
+	version: "1.0.0"
+)
+
+// 全局通用类型
+type (
+	Empty {
+		msg string `json:"msg"` // Generic response message
+	}
+	BaseResponse {
+		code int    `json:"code"` // Response code
+		msg  string `json:"msg"` // Response message
+	}
+	PaginationReq {
+		page     int `json:"page,default=1"` // Page number
+		pageSize int `json:"pageSize,default=10"` // Page size
+	}
+)
+
+// ======================== 用户管理模块 ========================
+// 不需要登录
+@server (
+	prefix: /api/v1/user
+	group:  user
+	jwt:    none
+)
+service api {
+	@doc "用户注册"
+	@handler RegisterUser
+	post /register (RegisterReq) returns (BaseResponse)
+
+	@doc "用户登录"
+	@handler LoginUser
+	post /login (LoginReq) returns (LoginResp)
+}
+
+// 需要登录
+@server (
+	prefix: /api/v1/user
+	group:  user
+	jwt:    Auth
+)
+service api {
+	@doc "获取用户信息"
+	@handler GetUserInfo
+	get /info/:userId (Empty) returns (UserInfoResp)
+
+	@doc "更新用户信息"
+	@handler UpdateUserInfo
+	put /info (UpdateUserInfoReq) returns (BaseResponse)
+
+	@doc "获取用户地址列表"
+	@handler GetUserAddresses
+	get /addresses/:userId (Empty) returns (AddressListResp)
+
+	@doc "添加用户地址"
+	@handler AddUserAddress
+	post /addresses (AddAddressReq) returns (BaseResponse)
+
+	@doc "编辑用户地址"
+	@handler EditUserAddress
+	put /addresses/:addressId (EditAddressReq) returns (BaseResponse)
+
+	@doc "删除用户地址"
+	@handler DeleteUserAddress
+	delete /addresses/:addressId (Empty) returns (BaseResponse)
+
+	@doc "获取用户登录历史"
+	@handler GetUserLoginHistory
+	get /login-history/:userId (Empty) returns (LoginHistoryResp)
+}
+
+// ======================== 购物车管理模块 ========================
+@server (
+	prefix: /api/v1/cart
+	group:  cart
+	jwt:    Auth
+)
+service api {
+	@doc "添加商品到购物车"
+	@handler AddToCart
+	post /add (AddToCartReq) returns (BaseResponse)
+
+	@doc "获取购物车列表"
+	@handler GetCartItems
+	get /list/:userId (Empty) returns (CartListResp)
+
+	@doc "更新购物车商品"
+	@handler UpdateCartItem
+	put /update/:userId/:productId (UpdateCartReq) returns (BaseResponse)
+
+	@doc "删除购物车商品"
+	@handler DeleteCartItem
+	delete /delete/:userId/:productId (Empty) returns (BaseResponse)
+
+	@doc "清空购物车"
+	@handler ClearCart
+	delete /clear/:userId (Empty) returns (BaseResponse)
+}
+
+// ======================== 订单管理模块 ========================
+@server (
+	prefix: /api/v1/order
+	group:  order
+	jwt:    Auth
+)
+service api {
+	@doc "提交订单"
+	@handler SubmitOrder
+	post /submit (SubmitOrderReq) returns (SubmitOrderResp)
+
+	@doc "获取用户订单列表"
+	@handler GetUserOrders
+	get /list/:userId (PaginationReq) returns (OrderListResp)
+
+	@doc "获取订单详情"
+	@handler GetOrderDetails
+	get /details/:orderId (Empty) returns (OrderDetailsResp)
+
+	@doc "取消订单"
+	@handler CancelOrder
+	delete /cancel/:orderId (Empty) returns (BaseResponse)
+}
+
+// ======================== 支付管理模块 ========================
+@server (
+	prefix: /api/v1/payment
+	group:  payment
+	jwt:    Auth
+)
+service api {
+	@doc "发起支付"
+	@handler MakePayment
+	post /make (MakePaymentReq) returns (PaymentResp)
+
+	@doc "获取支付状态"
+	@handler GetPaymentStatus
+	get /status/:paymentId (Empty) returns (PaymentStatusResp)
+
+	@doc "退款请求"
+	@handler RefundPayment
+	post /refund (RefundReq) returns (RefundResp)
+}
+
+// ======================== 评论与回复模块 ========================
+@server (
+	prefix: /api/v1/comment
+	group:  comment
+	jwt:    Auth
+)
+service api {
+	@doc "获取商品评论列表"
+	@handler GetComments
+	get /product/:productId (PaginationReq) returns (CommentListResp)
+
+	@doc "添加评论"
+	@handler AddComment
+	post /add (AddCommentReq) returns (BaseResponse)
+
+	@doc "编辑评论"
+	@handler EditComment
+	put /edit/:commentId (EditCommentReq) returns (BaseResponse)
+
+	@doc "删除评论"
+	@handler DeleteComment
+	delete /delete/:commentId (Empty) returns (BaseResponse)
+
+	@doc "获取评论的回复列表"
+	@handler GetReplies
+	get /replies/:commentId (PaginationReq) returns (ReplyListResp)
+
+	@doc "添加回复"
+	@handler AddReply
+	post /replies/add (AddReplyReq) returns (BaseResponse)
+
+	@doc "编辑回复"
+	@handler EditReply
+	put /replies/edit/:replyId (EditReplyReq) returns (BaseResponse)
+
+	@doc "删除回复"
+	@handler DeleteReply
+	delete /replies/delete/:replyId (Empty) returns (BaseResponse)
+}
+
+// ======================== 秒杀管理模块 ========================
+// 需要登录的 JWT 鉴权配置
+@server (
+	prefix: /api/v1/seckill
+	group:  seckill
+	jwt:    Auth
+)
+service api {
+	@doc "获取秒杀活动列表"
+	@handler GetSeckillEvents
+	get /events (GetSeckillEventsReq) returns (GetSeckillEventsResp)
+
+	@doc "获取秒杀商品列表"
+	@handler GetSeckillProducts
+	get /products (GetSeckillProductsReq) returns (GetSeckillProductsResp)
+
+	@doc "提交秒杀订单"
+	@handler PlaceSeckillOrder
+	post /order (SeckillOrderReq) returns (SeckillOrderResp)
+}
+
+// 用户管理相关类型
+type (
+	// 注册请求
+	RegisterReq {
+		username string `json:"username"` // 用户名
+		password string `json:"password"` // 密码
+		email    string `json:"email"` // 邮箱
+		phone    string `json:"phone"` // 手机号
+		avatar   string `json:"avatar"` // 用户头像URL
+	}
+	// 登录请求
+	LoginReq {
+		identifier string `json:"identifier"` // 用户名/邮箱/手机号
+		password   string `json:"password"` // 密码
+	}
+	// 登录响应
+	LoginResp {
+		token string `json:"token"` // JWT Token
+	}
+	// 获取用户信息响应
+	UserInfoResp {
+		user UserInfo `json:"user"` // 用户信息
+	}
+	// 用户信息结构
+	UserInfo {
+		id        int64  `json:"id"` // 用户ID
+		username  string `json:"username"` // 用户名
+		email     string `json:"email"` // 邮箱
+		phone     string `json:"phone"` // 手机号
+		avatar    string `json:"avatar"` // 用户头像URL
+		role      string `json:"role"` // 用户角色 (user/admin/super_admin)
+		createdAt string `json:"createdAt"` // 用户注册时间
+	}
+	// 更新用户信息请求
+	UpdateUserInfoReq {
+		userId   int64  `json:"userId"` // 用户ID
+		username string `json:"username,omitempty"` // 新用户名
+		email    string `json:"email,omitempty"` // 新邮箱
+		phone    string `json:"phone,omitempty"` // 新手机号
+		avatar   string `json:"avatar,omitempty"` // 新头像
+	}
+	// 用户地址列表响应
+	AddressListResp {
+		addresses []Address `json:"addresses"` // 地址列表
+	}
+	// 添加地址请求
+	AddAddressReq {
+		userId    int64  `json:"userId"` // 用户ID
+		line1     string `json:"line1"` // 地址行1
+		line2     string `json:"line2,omitempty"` // 地址行2
+		city      string `json:"city"` // 城市
+		state     string `json:"state"` // 省份/州
+		zip       string `json:"zip"` // 邮政编码
+		country   string `json:"country"` // 国家
+		isDefault bool   `json:"isDefault"` // 是否默认地址
+	}
+	// 编辑地址请求
+	EditAddressReq {
+		line1     string `json:"line1"` // 地址行1
+		line2     string `json:"line2,omitempty"` // 地址行2
+		city      string `json:"city"` // 城市
+		state     string `json:"state"` // 省份/州
+		zip       string `json:"zip"` // 邮政编码
+		country   string `json:"country"` // 国家
+		isDefault bool   `json:"isDefault"` // 是否默认地址
+	}
+	// 单个地址结构
+	Address {
+		id        int64  `json:"id"` // 地址ID
+		line1     string `json:"line1"` // 地址行1
+		line2     string `json:"line2,omitempty"` // 地址行2
+		city      string `json:"city"` // 城市
+		state     string `json:"state"` // 省份/州
+		zip       string `json:"zip"` // 邮政编码
+		country   string `json:"country"` // 国家
+		isDefault bool   `json:"isDefault"` // 是否默认
+	}
+	// 登录历史响应
+	LoginHistoryResp {
+		history []LoginHistoryEntry `json:"history"` // 登录历史记录列表
+	}
+	// 登录历史记录
+	LoginHistoryEntry {
+		id        int64  `json:"id"` // 记录ID
+		loginTime string `json:"loginTime"` // 登录时间
+		loginIp   string `json:"loginIp"` // 登录IP地址
+	}
+)
+
+// 订单管理相关类型
+type (
+	// 提交订单请求
+	SubmitOrderReq {
+		userId    int64          `json:"userId"` // 用户ID
+		addressId int64          `json:"addressId"` // 收货地址ID
+		items     []OrderItemReq `json:"items"` // 订单商品列表
+	}
+	// 订单商品项请求
+	OrderItemReq {
+		productId int64 `json:"productId"` // 商品ID
+		quantity  int   `json:"quantity"` // 购买数量
+	}
+	// 提交订单响应
+	SubmitOrderResp {
+		orderId int64 `json:"orderId"` // 订单ID
+	}
+	// 获取订单列表响应
+	OrderListResp {
+		orders []OrderResp `json:"orders"` // 订单列表
+	}
+	// 单个订单信息
+	OrderResp {
+		id          int64   `json:"id"` // 订单ID
+		orderNumber string  `json:"orderNumber"` // 订单编号
+		status      string  `json:"status"` // 订单状态
+		totalAmount float64 `json:"totalAmount"` // 订单总金额
+		createdAt   string  `json:"createdAt"` // 订单创建时间
+	}
+	// 获取订单详情响应
+	OrderDetailsResp {
+		order OrderDetails `json:"order"` // 订单详情
+	}
+	// 订单详情结构
+	OrderDetails {
+		id          int64           `json:"id"` // 订单ID
+		orderNumber string          `json:"orderNumber"` // 订单编号
+		status      string          `json:"status"` // 订单状态
+		totalAmount float64         `json:"totalAmount"` // 订单总金额
+		address     OrderAddress    `json:"address"` // 收货地址信息
+		items       []OrderItemResp `json:"items"` // 订单商品项列表
+		createdAt   string          `json:"createdAt"` // 订单创建时间
+		updatedAt   string          `json:"updatedAt"` // 订单更新时间
+	}
+	// 订单商品项响应
+	OrderItemResp {
+		productId int64   `json:"productId"` // 商品ID
+		name      string  `json:"name"` // 商品名称
+		price     float64 `json:"price"` // 单价
+		quantity  int     `json:"quantity"` // 数量
+		total     float64 `json:"total"` // 商品小计
+	}
+	// 收货地址信息
+	OrderAddress {
+		id      int64  `json:"id"` // 地址ID
+		line1   string `json:"line1"` // 地址行1
+		line2   string `json:"line2"` // 地址行2
+		city    string `json:"city"` // 城市
+		state   string `json:"state"` // 省份/州
+		zip     string `json:"zip"` // 邮政编码
+		country string `json:"country"` // 国家
+	}
+)
+
+// 商品管理相关类型
+type (
+	// 获取商品列表请求
+	GetProductListReq {
+		categoryId int64  `json:"categoryId,omitempty"` // 分类ID，可选
+		keyword    string `json:"keyword,omitempty"` // 搜索关键词，可选
+		page       int    `json:"page,default=1"` // 页码
+		pageSize   int    `json:"pageSize,default=10"` // 每页数量
+		sortBy     string `json:"sortBy,omitempty"` // 排序字段，例如: price, createdAt
+		order      string `json:"order,omitempty"` // 排序方式: asc/desc
+	}
+	// 获取商品列表响应
+	GetProductListResp {
+		products []ProductSummary `json:"products"` // 商品摘要列表
+		total    int              `json:"total"` // 总数
+	}
+	// 商品摘要信息
+	ProductSummary {
+		id          int64   `json:"id"` // 商品ID
+		name        string  `json:"name"` // 商品名称
+		price       float64 `json:"price"` // 商品价格
+		imageUrl    string  `json:"imageUrl"` // 商品主图URL
+		description string  `json:"description"` // 简短描述
+		stock       int     `json:"stock"` // 商品库存
+	}
+	// 获取商品详情请求
+	GetProductDetailReq {
+		productId int64 `json:"productId"` // 商品ID
+	}
+	// 获取商品详情响应
+	GetProductDetailResp {
+		product ProductDetail `json:"product"` // 商品详细信息
+	}
+	// 商品详细信息
+	ProductDetail {
+		id            int64       `json:"id"` // 商品ID
+		name          string      `json:"name"` // 商品名称
+		price         float64     `json:"price"` // 商品价格
+		originalPrice float64     `json:"originalPrice,omitempty"` // 原价（如有折扣）
+		description   string      `json:"description"` // 商品描述
+		imageUrls     []string    `json:"imageUrls"` // 商品图片列表
+		stock         int         `json:"stock"` // 库存数量
+		categoryId    int64       `json:"categoryId"` // 分类ID
+		categoryName  string      `json:"categoryName"` // 分类名称
+		attributes    []Attribute `json:"attributes"` // 商品属性列表
+		createdAt     string      `json:"createdAt"` // 商品创建时间
+		updatedAt     string      `json:"updatedAt"` // 商品更新时间
+	}
+	// 商品属性信息
+	Attribute {
+		name  string `json:"name"` // 属性名
+		value string `json:"value"` // 属性值
+	}
+	// 添加商品请求（管理员功能）
+	AddProductReq {
+		name          string      `json:"name"` // 商品名称
+		price         float64     `json:"price"` // 商品价格
+		originalPrice float64     `json:"originalPrice,omitempty"` // 原价
+		description   string      `json:"description"` // 商品描述
+		imageUrls     []string    `json:"imageUrls"` // 商品图片列表
+		stock         int         `json:"stock"` // 库存数量
+		categoryId    int64       `json:"categoryId"` // 分类ID
+		attributes    []Attribute `json:"attributes"` // 商品属性
+	}
+	// 编辑商品请求（管理员功能）
+	EditProductReq {
+		productId     int64       `json:"productId"` // 商品ID
+		name          string      `json:"name,omitempty"` // 商品名称
+		price         float64     `json:"price,omitempty"` // 商品价格
+		originalPrice float64     `json:"originalPrice,omitempty"` // 原价
+		description   string      `json:"description,omitempty"` // 商品描述
+		imageUrls     []string    `json:"imageUrls,omitempty"` // 商品图片列表
+		stock         int         `json:"stock,omitempty"` // 库存数量
+		categoryId    int64       `json:"categoryId,omitempty"` // 分类ID
+		attributes    []Attribute `json:"attributes,omitempty"` // 商品属性
+	}
+	// 删除商品请求（管理员功能）
+	DeleteProductReq {
+		productId int64 `json:"productId"` // 商品ID
+	}
+)
+
+// 购物车管理相关类型
+type (
+	// 添加商品到购物车请求
+	AddToCartReq {
+		userId    int64 `json:"userId"` // 用户ID
+		productId int64 `json:"productId"` // 商品ID
+		quantity  int   `json:"quantity"` // 购买数量
+	}
+	// 更新购物车商品请求
+	UpdateCartReq {
+		userId    int64 `json:"userId"` // 用户ID
+		productId int64 `json:"productId"` // 商品ID
+		quantity  int   `json:"quantity"` // 更新后的数量
+		selected  bool  `json:"selected"` // 是否选中
+	}
+	// 删除购物车商品请求
+	DeleteCartReq {
+		userId    int64 `json:"userId"` // 用户ID
+		productId int64 `json:"productId"` // 商品ID
+	}
+	// 清空购物车请求
+	ClearCartReq {
+		userId int64 `json:"userId"` // 用户ID
+	}
+	// 获取购物车信息响应
+	CartListResp {
+		items       []CartItemResp `json:"items"` // 购物车商品列表
+		totalAmount float64        `json:"totalAmount"` // 总金额
+	}
+	// 购物车商品结构
+	CartItemResp {
+		productId   int64   `json:"productId"` // 商品ID
+		name        string  `json:"name"` // 商品名称
+		imageUrl    string  `json:"imageUrl"` // 商品主图URL
+		price       float64 `json:"price"` // 单价
+		quantity    int     `json:"quantity"` // 数量
+		selected    bool    `json:"selected"` // 是否选中
+		totalAmount float64 `json:"totalAmount"` // 商品小计
+	}
+	// 选择购物车商品请求
+	SelectCartItemsReq {
+		userId     int64   `json:"userId"` // 用户ID
+		productIds []int64 `json:"productIds"` // 商品ID列表
+		selected   bool    `json:"selected"` // 是否选中
+	}
+)
+
+// 商品评论管理相关类型
+type (
+	// 添加评论请求
+	AddCommentReq {
+		productId int64  `json:"productId"` // 商品ID
+		userId    int64  `json:"userId"` // 用户ID
+		rating    int32  `json:"rating"` // 评分 (1-5)
+		content   string `json:"content"` // 评论内容
+	}
+	// 编辑评论请求
+	EditCommentReq {
+		commentId int64  `json:"commentId"` // 评论ID
+		userId    int64  `json:"userId"` // 用户ID，确保是评论的作者
+		content   string `json:"content"` // 更新后的评论内容
+	}
+	// 删除评论请求
+	DeleteCommentReq {
+		commentId int64 `json:"commentId"` // 评论ID
+		userId    int64 `json:"userId"` // 用户ID，确保是评论的作者
+	}
+	// 获取评论列表请求
+	GetCommentsReq {
+		productId int64 `json:"productId"` // 商品ID
+		page      int   `json:"page,default=1"` // 页码
+		pageSize  int   `json:"pageSize,default=10"` // 每页数量
+	}
+	// 获取评论列表响应
+	CommentListResp {
+		comments []CommentResp `json:"comments"` // 评论列表
+		total    int           `json:"total"` // 评论总数
+	}
+	// 单个评论信息
+	CommentResp {
+		id        int64  `json:"id"` // 评论ID
+		productId int64  `json:"productId"` // 商品ID
+		userId    int64  `json:"userId"` // 用户ID
+		username  string `json:"username"` // 评论用户的名称
+		rating    int32  `json:"rating"` // 评分 (1-5)
+		content   string `json:"content"` // 评论内容
+		createdAt string `json:"createdAt"` // 评论创建时间
+		updatedAt string `json:"updatedAt"` // 评论更新时间
+	}
+)
+
+// 评论回复管理相关类型
+type (
+	// 添加回复请求
+	AddReplyReq {
+		commentId int64  `json:"commentId"` // 评论ID
+		userId    int64  `json:"userId"` // 用户ID
+		content   string `json:"content"` // 回复内容
+	}
+	// 编辑回复请求
+	EditReplyReq {
+		replyId int64  `json:"replyId"` // 回复ID
+		userId  int64  `json:"userId"` // 用户ID，确保是回复的作者
+		content string `json:"content"` // 更新后的回复内容
+	}
+	// 删除回复请求
+	DeleteReplyReq {
+		replyId int64 `json:"replyId"` // 回复ID
+		userId  int64 `json:"userId"` // 用户ID，确保是回复的作者
+	}
+	// 获取回复列表请求
+	GetRepliesReq {
+		commentId int64 `json:"commentId"` // 评论ID
+		page      int   `json:"page,default=1"` // 页码
+		pageSize  int   `json:"pageSize,default=10"` // 每页数量
+	}
+	// 获取回复列表响应
+	ReplyListResp {
+		replies []ReplyResp `json:"replies"` // 回复列表
+		total   int         `json:"total"` // 回复总数
+	}
+	// 单个回复信息
+	ReplyResp {
+		id        int64  `json:"id"` // 回复ID
+		commentId int64  `json:"commentId"` // 评论ID
+		userId    int64  `json:"userId"` // 用户ID
+		username  string `json:"username"` // 回复用户的名称
+		content   string `json:"content"` // 回复内容
+		createdAt string `json:"createdAt"` // 回复创建时间
+		updatedAt string `json:"updatedAt"` // 回复更新时间
+	}
+)
+
+// 支付管理相关类型
+type (
+	// 发起支付请求
+	MakePaymentReq {
+		orderId       int64   `json:"orderId"` // 订单ID
+		userId        int64   `json:"userId"` // 用户ID
+		amount        float64 `json:"amount"` // 支付金额
+		paymentMethod string  `json:"paymentMethod"` // 支付方式 (credit_card, debit_card, paypal, bank_transfer, wallet)
+	}
+	// 发起支付响应
+	PaymentResp {
+		paymentId     int64  `json:"paymentId"` // 支付ID
+		transactionId string `json:"transactionId"` // 交易流水号
+		status        string `json:"status"` // 支付状态 (pending, completed, failed)
+	}
+	// 获取支付状态请求
+	GetPaymentStatusReq {
+		paymentId int64 `json:"paymentId"` // 支付ID
+	}
+	// 获取支付状态响应
+	PaymentStatusResp {
+		paymentId int64  `json:"paymentId"` // 支付ID
+		status    string `json:"status"` // 支付状态 (pending, completed, failed, refunded)
+	}
+	// 退款请求
+	RefundReq {
+		paymentId    int64   `json:"paymentId"` // 支付ID
+		refundAmount float64 `json:"refundAmount"` // 退款金额
+		refundReason string  `json:"refundReason"` // 退款原因
+	}
+	// 退款响应
+	RefundResp {
+		refundStatus string `json:"refundStatus"` // 退款状态 (pending, processed, failed)
+	}
+)
+
+// 秒杀管理相关类型
+type (
+	// 获取秒杀活动列表请求
+	GetSeckillEventsReq {
+		page     int `json:"page,default=1"` // 页码
+		pageSize int `json:"pageSize,default=10"` // 每页数量
+	}
+	// 获取秒杀活动列表响应
+	GetSeckillEventsResp {
+		events []SeckillEventResp `json:"events"` // 秒杀活动列表
+		total  int                `json:"total"` // 秒杀活动总数
+	}
+	// 秒杀活动信息
+	SeckillEventResp {
+		id        int64  `json:"id"` // 秒杀活动ID
+		name      string `json:"name"` // 秒杀活动名称
+		startTime string `json:"startTime"` // 开始时间
+		endTime   string `json:"endTime"` // 结束时间
+		status    string `json:"status"` // 活动状态 (upcoming/ongoing/ended)
+	}
+	// 获取秒杀商品列表请求
+	GetSeckillProductsReq {
+		eventId  int64 `json:"eventId"` // 秒杀活动ID
+		page     int   `json:"page,default=1"` // 页码
+		pageSize int   `json:"pageSize,default=10"` // 每页数量
+	}
+	// 获取秒杀商品列表响应
+	GetSeckillProductsResp {
+		products []SeckillProductResp `json:"products"` // 秒杀商品列表
+		total    int                  `json:"total"` // 商品总数
+	}
+	// 秒杀商品信息
+	SeckillProductResp {
+		id            int64   `json:"id"` // 秒杀商品ID
+		eventId       int64   `json:"eventId"` // 秒杀活动ID
+		productId     int64   `json:"productId"` // 商品ID
+		productName   string  `json:"productName"` // 商品名称
+		seckillPrice  float64 `json:"seckillPrice"` // 秒杀价格
+		originalPrice float64 `json:"originalPrice"` // 商品原价
+		stock         int     `json:"stock"` // 秒杀库存
+		imageUrl      string  `json:"imageUrl"` // 商品图片URL
+	}
+	// 提交秒杀订单请求
+	SeckillOrderReq {
+		eventId   int64 `json:"eventId"` // 秒杀活动ID
+		productId int64 `json:"productId"` // 商品ID
+		userId    int64 `json:"userId"` // 用户ID
+		quantity  int   `json:"quantity"` // 购买数量
+	}
+	// 提交秒杀订单响应
+	SeckillOrderResp {
+		orderId int64 `json:"orderId"` // 秒杀订单ID
+	}
+)
+
