@@ -1,0 +1,140 @@
+syntax = "proto3";
+
+package user;
+
+option go_package = "./user";
+
+message Empty {}
+
+message RegisterRequest {
+    string username = 1;
+    string password = 2;
+    string email = 3;
+    string phone = 4;
+    string avatar = 5;
+    Address address = 6;
+    string admin_code=7;
+}
+
+message RegisterResponse {
+    int64 userId = 1;
+}
+
+message LoginRequest {
+    string identifier = 1; // username/email/phone
+    string password = 2;
+}
+
+message LoginResponse {
+    string token = 1;
+}
+
+message Address {
+    int64 id = 1;
+    string address_line1 = 2;
+    string address_line2 = 3;
+    string city = 4;
+    string state = 5;
+    string postal_code = 6;
+    string country = 7;
+}
+
+message GetAddressesRequest {
+    int64 userId = 1;
+}
+
+message GetAddressesResponse {
+    repeated Address addresses = 1;
+}
+
+message AddAddressRequest {
+    int64 userId = 1;
+    Address address = 2;
+}
+message AddAddressResponse{
+    int64 id=1;
+}
+
+message EditAddressRequest {
+    int64 userId = 1;
+    Address address = 2;
+}
+
+message DeleteAddressRequest {
+    int64 addressId = 1;
+}
+
+message SetDefaultAddressRequest {
+    int64 userId = 1;
+    int64 addressId=2;
+}
+
+message GetLoginHistoryRequest {
+    int64 userId = 1;
+}
+
+message LoginHistoryEntry {
+    int64 id=1;
+    int64 userId = 2;
+    string login_time = 3;
+    string login_ip=4;
+}
+
+message GetLoginHistoryResponse {
+    repeated LoginHistoryEntry history = 1;
+}
+
+message GetUserInfoRequest {
+    int64 userId = 1; // Target user's ID
+    int64 requesterId = 2;//the user who request this user info.
+}
+
+message UserInfo {
+    int64 id = 1;
+    string username = 2;
+    string email = 3;
+    string phone = 4;
+    string avatar = 5;
+    string role=6;
+}
+
+message GetUserInfoResponse {
+    UserInfo user = 1;
+}
+
+message GetCollectionRequest{
+    int64 userId=1;
+}
+
+message GetCollectionResponse {
+    repeated int64 productIds = 1;
+}
+
+message AddCollectionRequest {
+    int64 userId=1;
+    int64 productId=2;
+}
+message EditCollectionRequest{
+    int64 userId=1;
+    repeated int64 productIds=2;
+}
+message DeleteCollectionRequest {
+    int64 userId=1;
+    int64 productId=2;
+}
+
+service User {
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc GetAddresses(GetAddressesRequest) returns (GetAddressesResponse);
+    rpc AddAddress(AddAddressRequest) returns (AddAddressResponse);
+    rpc EditAddress(EditAddressRequest) returns (Empty);
+    rpc DeleteAddress(DeleteAddressRequest) returns (Empty);
+    rpc SetDefaultAddress(SetDefaultAddressRequest) returns (Empty);
+    rpc GetLoginHistory(GetLoginHistoryRequest) returns (GetLoginHistoryResponse);
+    rpc GetUserInfo(GetUserInfoRequest) returns (GetUserInfoResponse);
+    rpc GetCollection(GetCollectionRequest) returns (GetCollectionResponse);
+    rpc AddCollection(AddCollectionRequest) returns (Empty);
+    rpc EditCollection(EditCollectionRequest) returns (Empty);
+    rpc DeleteCollection(DeleteCollectionRequest) returns (Empty);
+}

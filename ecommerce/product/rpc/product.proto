@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package product;
+
+option go_package = "./product";
+
+message Empty{}
+
+message Product {
+    int64 id = 1;
+    string name = 2;
+    string description = 3;
+    float price = 4;
+    int32 stock = 5;
+    int64 categoryId = 6;
+    string brand = 7;
+    string status = 8;
+    int32 salesVolume=9;
+    repeated string imageURLs = 10;
+    repeated ProductAttribute attributes=11;
+}
+
+message ProductAttribute{
+    int64 id=1;
+    string name=2;
+    string value=3;
+}
+
+message Category {
+    int64 id = 1;
+    string name = 2;
+    int64 parentId = 3;
+}
+
+message GetProductRequest {
+    int64 id = 1;
+}
+
+message GetProductsByCategoryRequest {
+    int64 categoryId = 1;
+    int32 page = 2;
+    int32 pageSize=3;
+}
+
+message GetProductsResponse {
+    repeated Product products = 1;
+}
+
+message SearchProductsRequest{
+    string keyword = 1;
+    int32 page=2;
+    int32 pageSize=3;
+}
+
+message UpdateProductStockRequest{
+    int64 productId=1;
+    int32 quantity=2;
+}
+
+service Products {
+    rpc GetProduct(GetProductRequest) returns (Product);
+    rpc GetProductsByCategory(GetProductsByCategoryRequest) returns (GetProductsResponse);
+    rpc SearchProducts(SearchProductsRequest) returns (GetProductsResponse);
+    rpc UpdateProductStock(UpdateProductStockRequest) returns(Empty);
+}

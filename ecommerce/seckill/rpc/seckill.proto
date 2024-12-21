@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package seckill;
+
+option go_package = "./seckill";
+
+message Empty{}
+
+message SeckillEvent {
+    int64 id = 1;
+    string name = 2;
+    string startTime = 3; // Use string for timestamp for easier client handling
+    string endTime = 4;
+    string status = 5;
+}
+
+message SeckillProduct {
+    int64 id = 1;
+    int64 eventId = 2;
+    int64 productId = 3;
+    float seckillPrice = 4;
+    int32 stock = 5;
+    float originalPrice=6;
+}
+
+message GetSeckillEventsRequest{}
+message GetSeckillEventsResponse{
+    repeated SeckillEvent events=1;
+}
+
+message GetSeckillProductsRequest {
+    int64 eventId = 1;
+}
+message GetSeckillProductsResponse {
+    repeated SeckillProduct products = 1;
+}
+message SeckillOrderRequest {
+    int64 eventId = 1;
+    int64 productId = 2;
+    int64 userId = 3;
+    int32 quantity=4;
+}
+
+message SeckillOrderResponse{
+    int64 orderId=1;
+}
+
+service Seckill {
+    rpc GetSeckillEvents(GetSeckillEventsRequest) returns (GetSeckillEventsResponse);
+    rpc GetSeckillProducts(GetSeckillProductsRequest) returns (GetSeckillProductsResponse);
+    rpc SeckillOrder(SeckillOrderRequest) returns (SeckillOrderResponse);
+}

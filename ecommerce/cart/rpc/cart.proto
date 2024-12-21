@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package cart;
+
+option go_package = "cart";
+
+message Empty{}
+
+message CartItem {
+    int64 productId = 1;
+    int32 quantity = 2;
+    float price = 3;
+    bool selected = 4;
+}
+
+message AddToCartRequest {
+    int64 userId = 1;
+    CartItem item = 2;
+}
+
+message GetCartRequest {
+    int64 userId = 1;
+}
+
+message GetCartResponse {
+    repeated CartItem items = 1;
+}
+
+message UpdateCartItemRequest {
+    int64 userId = 1;
+    CartItem item = 2;
+}
+
+message DeleteFromCartRequest {
+    int64 userId = 1;
+    int64 productId = 2;
+}
+
+message SelectCartItemsRequest {
+    int64 userId = 1;
+    repeated int64 productIds = 2;
+    bool selected=3;
+}
+
+message ClearCartRequest {
+    int64 userId = 1;
+}
+
+service Cart {
+    rpc AddToCart(AddToCartRequest) returns (Empty);
+    rpc GetCart(GetCartRequest) returns (GetCartResponse);
+    rpc UpdateCartItem(UpdateCartItemRequest) returns(Empty);
+    rpc DeleteFromCart(DeleteFromCartRequest) returns (Empty);
+    rpc SelectCartItems(SelectCartItemsRequest) returns (Empty);
+    rpc ClearCart(ClearCartRequest) returns (Empty);
+}

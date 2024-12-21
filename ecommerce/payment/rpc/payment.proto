@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "./payment";
+
+message Empty{}
+
+message PaymentRequest {
+    int64 orderId = 1;
+    int64 userId=2;
+    float amount = 3;
+    string paymentMethod = 4;
+}
+
+message PaymentResponse {
+    int64 paymentId = 1;
+    string transactionId = 2;
+    string paymentStatus = 3;
+}
+
+message GetPaymentStatusRequest{
+    int64 paymentId=1;
+}
+
+message GetPaymentStatusResponse{
+    string paymentStatus=1;
+}
+
+message RefundRequest{
+    int64 paymentId=1;
+    float refundAmount=2;
+    string refundReason=3;
+}
+message RefundResponse{
+    string refundStatus=1;
+}
+
+service Payment {
+    rpc MakePayment(PaymentRequest) returns (PaymentResponse);
+    rpc GetPaymentStatus(GetPaymentStatusRequest) returns (GetPaymentStatusResponse);
+    rpc Refund(RefundRequest) returns(RefundResponse);
+}

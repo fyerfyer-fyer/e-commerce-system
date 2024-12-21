@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package reply;
+
+option go_package = "./reply";
+
+message Empty{}
+
+message Reply {
+    int64 id = 1;
+    int64 commentId = 2;
+    int64 userId = 3;
+    string content = 4;
+}
+message GetRepliesRequest{
+    int64 commentId=1;
+    int32 page=2;
+    int32 pageSize=3;
+}
+message GetReplyRequest{
+    int64 replyId=1;
+}
+message GetRepliesResponse{
+    repeated Reply replies=1;
+}
+message AddReplyRequest {
+    int64 commentId = 1;
+    int64 userId = 2;
+    string content = 3;
+}
+message EditReplyRequest{
+    int64 replyId=1;
+    int64 userId=2;
+    string content=3;
+}
+message DeleteReplyRequest{
+    int64 replyId=1;
+    int64 userId=2;
+}
+
+service ReplyService {
+    rpc GetReplies(GetRepliesRequest) returns (GetRepliesResponse);
+    rpc GetReply(GetReplyRequest) returns (Reply);
+    rpc AddReply(AddReplyRequest) returns (Empty);
+    rpc EditReply(EditReplyRequest) returns (Empty);
+    rpc DeleteReply(DeleteReplyRequest) returns(Empty);
+}

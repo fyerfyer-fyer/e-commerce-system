@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package comment;
+
+option go_package = "./comment";
+
+message Empty {}
+
+message Comment {
+    int64 id = 1;
+    int64 productId = 2;
+    int64 userId = 3;
+    int32 rating = 4;
+    string content = 5;
+    string status = 6;
+}
+
+message GetCommentsRequest {
+    int64 productId = 1;
+    int32 page=2;
+    int32 pageSize=3;
+}
+
+message GetCommentRequest{
+    int64 commentId=1;
+}
+
+message GetCommentsResponse {
+    repeated Comment comments = 1;
+}
+
+message AddCommentRequest {
+    int64 productId = 1;
+    int64 userId = 2;
+    int32 rating = 3;
+    string content = 4;
+}
+
+message EditCommentRequest{
+    int64 commentId=1;
+    int64 userId=2;
+    string content=3;
+}
+message DeleteCommentRequest{
+    int64 commentId=1;
+    int64 userId=2;
+}
+
+service CommentService {
+    rpc GetComments(GetCommentsRequest) returns (GetCommentsResponse);
+    rpc GetComment(GetCommentRequest) returns (Comment);
+    rpc AddComment(AddCommentRequest) returns (Empty);
+    rpc EditComment(EditCommentRequest) returns(Empty);
+    rpc DeleteComment(DeleteCommentRequest) returns(Empty);
+}

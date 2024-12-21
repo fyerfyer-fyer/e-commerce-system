@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package order;
+
+option go_package = "./order";
+
+message Empty {}
+
+message OrderItem {
+    int64 productId = 1;
+    int32 quantity = 2;
+    int64 seckill_id=3;
+    float price = 4;
+}
+
+message Order {
+    int64 id = 1;
+    string orderNumber = 2;
+    int64 userId = 3;
+    repeated OrderItem items = 4;
+    float totalAmount = 5;
+    string status = 6;
+    int64 addressId = 7;
+    PaymentInfo paymentInfo=8;
+}
+
+message PaymentInfo{
+    int64 paymentId = 1;
+    string paymentMethod = 2;
+    string paymentStatus=3;
+    string transactionId=4;
+    float paymentAmount=5;
+}
+
+message GetOrdersRequest {
+    int64 userId = 1;
+}
+
+message GetOrdersResponse {
+    repeated Order orders = 1; // Basic order info
+}
+
+message GetOrderRequest {
+    int64 orderId = 1;
+}
+
+message SubmitOrderRequest {
+    int64 userId = 1;
+    repeated OrderItem items = 2;
+    int64 addressId = 3;
+}
+
+message SubmitOrderResponse{
+    int64 orderId=1;
+}
+
+message EditOrderRequest {
+    Order order = 1;
+}
+message DeleteOrderRequest {
+    int64 orderId=1;
+    bool putIntoCart=2;
+}
+
+// Internal Service RPCs
+message GetOrderItemsRequest{
+    int64 orderId=1;
+}
+message GetOrderItemsResponse{
+    repeated OrderItem items=1;
+}
+
+service Orders {
+    rpc GetOrders(GetOrdersRequest) returns (GetOrdersResponse);
+    rpc GetOrder(GetOrderRequest) returns (Order);
+    rpc SubmitOrder(SubmitOrderRequest) returns (SubmitOrderResponse);
+    rpc EditOrder(EditOrderRequest) returns (Empty);
+    rpc DeleteOrder(DeleteOrderRequest) returns (Empty);
+    rpc GetOrderItems(GetOrderItemsRequest) returns(GetOrderItemsResponse);
+}
