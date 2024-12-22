@@ -1,0 +1,260 @@
+/* Reset some default styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f0f2f5;
+    color: #333;
+}
+
+.header {
+    background-color: #001529;
+    padding: 16px;
+    color: white;
+}
+
+.header ul {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+}
+
+.header a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+}
+
+.footer {
+    background-color: #001529;
+    color: white;
+    text-align: center;
+    padding: 16px;
+    margin-top: 20px;
+}
+
+.layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.content {
+    display: flex;
+    flex-grow: 1;
+    padding: 20px;
+}
+
+.sidebar {
+    width: 200px;
+    background-color: #fff;
+    border-right: 1px solid #e8e8e8;
+    padding: 20px;
+}
+
+main {
+    flex-grow: 1;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom styles for pages */
+.page-title {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.form-container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.form-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-container label {
+    font-weight: bold;
+}
+
+.form-container input,
+.form-container select,
+.form-container textarea {
+    padding: 8px;
+    border: 1px solid #d9d9d9;
+    border-radius: 4px;
+}
+
+.form-container button {
+    padding: 8px 16px;
+    background-color: #1890ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.form-container button:hover {
+    background-color: #40a9ff;
+}
+
+/* Login and Register common styles */
+.login-container,
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.login-container {
+  background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
+}
+
+.register-container {
+  background: linear-gradient(135deg, #722ed1 0%, #1890ff 100%);
+}
+
+.login-card,
+.register-card {
+  background: white;
+  padding: 40px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin: 20px;
+}
+
+.login-card {
+  max-width: 400px;
+}
+
+.register-card {
+  max-width: 450px;
+}
+
+.login-title,
+.register-title {
+  text-align: center;
+  margin-bottom: 30px !important;
+}
+
+.login-title {
+  color: #1890ff;
+}
+
+.register-title {
+  color: #722ed1;
+}
+
+/* Form styles */
+.login-form .ant-form-item,
+.register-form .ant-form-item {
+  margin-bottom: 24px;
+}
+
+/* Input styles */
+.login-form .ant-input-affix-wrapper,
+.register-form .ant-input-affix-wrapper,
+.login-form .ant-input,
+.register-form .ant-input {
+  height: 42px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+/* Input prefix (icons) */
+.login-form .ant-input-prefix,
+.register-form .ant-input-prefix {
+  margin-right: 10px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+/* Password input */
+.login-form .ant-input-password,
+.register-form .ant-input-password {
+  height: 42px;
+}
+
+.login-form .ant-input-password input,
+.register-form .ant-input-password input {
+  height: 24px;
+  padding: 0;
+}
+
+/* Normal input */
+.login-form .ant-input,
+.register-form .ant-input {
+  padding: 4px 11px;
+}
+
+/* Input wrapper */
+.login-form .ant-input-affix-wrapper,
+.register-form .ant-input-affix-wrapper {
+  padding: 0 11px;
+  display: flex;
+  align-items: center;
+}
+
+/* Button styles */
+.login-form .ant-btn,
+.register-form .ant-btn {
+  height: 42px;
+  border-radius: 6px;
+  font-size: 16px;
+  width: 100%;
+}
+
+/* Link styles */
+.register-link,
+.login-link {
+  display: block;
+  text-align: center;
+  transition: color 0.3s;
+}
+
+.register-link {
+  color: #1890ff;
+}
+
+.register-link:hover {
+  color: #40a9ff;
+}
+
+.login-link {
+  color: #722ed1;
+}
+
+.login-link:hover {
+  color: #9254de;
+}
+
+/* Form labels */
+.register-form .ant-form-item-label > label,
+.login-form .ant-form-item-label > label {
+  color: #666;
+  font-weight: 500;
+}
+
+/* Subtitle */
+.register-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* Placeholder styles */
+.login-form .ant-input::placeholder,
+.register-form .ant-input::placeholder,
+.login-form .ant-input-password input::placeholder,
+.register-form .ant-input-password input::placeholder {
+  color: rgba(0, 0, 0, 0.35);
+}

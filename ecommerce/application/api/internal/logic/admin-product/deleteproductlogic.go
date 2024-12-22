@@ -1,4 +1,4 @@
-package seckill
+package admin-product
 
 import (
 	"context"
@@ -9,22 +9,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type GetSeckillEventsLogic struct {
+type DeleteProductLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 获取秒杀活动列表
-func NewGetSeckillEventsLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetSeckillEventsLogic {
-	return &GetSeckillEventsLogic{
+// 删除商品
+func NewDeleteProductLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteProductLogic {
+	return &DeleteProductLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *GetSeckillEventsLogic) GetSeckillEvents(req *types.PaginationReq) (resp *types.GetSeckillEventsResp, err error) {
+func (l *DeleteProductLogic) DeleteProduct(req *types.Empty) (resp *types.BaseResponse, err error) {
 	// todo: add your logic here and delete this line
 
 	return

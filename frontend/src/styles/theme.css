@@ -1,0 +1,47 @@
+/* Custom theme overrides for Ant Design */
+.ant-btn-primary {
+    background-color: #1890ff;
+    border-color: #1890ff;
+}
+
+.ant-btn-primary:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+}
+
+.ant-input {
+    border-color: #d9d9d9;
+}
+
+.ant-input:focus {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.ant-form-item-label {
+    font-weight: bold;
+}
+
+.ant-table-thead>tr>th {
+    background-color: #f0f2f5;
+    font-weight: bold;
+}
+
+.ant-pagination-item-active a {
+    background-color: #1890ff;
+    color: white;
+}
+
+.ant-pagination-item-active a:hover {
+    background-color: #40a9ff;
+}
+
+:root {
+    --primary-color: #1890ff;
+    --primary-color-hover: #40a9ff;
+    --gradient-start: #1890ff;
+    --gradient-end: #722ed1;
+    --box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    --border-radius: 6px;
+    --input-height: 42px;
+}

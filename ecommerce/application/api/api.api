@@ -48,7 +48,7 @@ service api {
 service api {
 	@doc "获取用户信息"
 	@handler GetUserInfo
-	get /info/:userId (Empty) returns (UserInfoResp)
+	get /info (Empty) returns (UserInfoResp)
 
 	@doc "更新用户信息"
 	@handler UpdateUserInfo
@@ -56,7 +56,7 @@ service api {
 
 	@doc "获取用户地址列表"
 	@handler GetUserAddresses
-	get /addresses/:userId (Empty) returns (AddressListResp)
+	get /addresses (Empty) returns (AddressListResp)
 
 	@doc "添加用户地址"
 	@handler AddUserAddress
@@ -72,7 +72,7 @@ service api {
 
 	@doc "获取用户登录历史"
 	@handler GetUserLoginHistory
-	get /login-history/:userId (Empty) returns (LoginHistoryResp)
+	get /login-history (Empty) returns (LoginHistoryResp)
 }
 
 // ======================== 购物车管理模块 ========================
@@ -88,19 +88,19 @@ service api {
 
 	@doc "获取购物车列表"
 	@handler GetCartItems
-	get /list/:userId (Empty) returns (CartListResp)
+	get /list (Empty) returns (CartListResp)
 
 	@doc "更新购物车商品"
 	@handler UpdateCartItem
-	put /update/:userId/:productId (UpdateCartReq) returns (BaseResponse)
+	put /update/:productId (UpdateCartReq) returns (BaseResponse)
 
 	@doc "删除购物车商品"
 	@handler DeleteCartItem
-	delete /delete/:userId/:productId (Empty) returns (BaseResponse)
+	delete /delete/:productId (Empty) returns (BaseResponse)
 
 	@doc "清空购物车"
 	@handler ClearCart
-	delete /clear/:userId (Empty) returns (BaseResponse)
+	delete /clear (Empty) returns (BaseResponse)
 }
 
 // ======================== 订单管理模块 ========================
@@ -116,7 +116,7 @@ service api {
 
 	@doc "获取用户订单列表"
 	@handler GetUserOrders
-	get /list/:userId (PaginationReq) returns (OrderListResp)
+	get /list (PaginationReq) returns (OrderListResp)
 
 	@doc "获取订单详情"
 	@handler GetOrderDetails
@@ -188,7 +188,6 @@ service api {
 }
 
 // ======================== 秒杀管理模块 ========================
-// 需要登录的 JWT 鉴权配置
 @server (
 	prefix: /api/v1/seckill
 	group:  seckill
@@ -197,7 +196,7 @@ service api {
 service api {
 	@doc "获取秒杀活动列表"
 	@handler GetSeckillEvents
-	get /events (GetSeckillEventsReq) returns (GetSeckillEventsResp)
+	get /events (PaginationReq) returns (GetSeckillEventsResp)
 
 	@doc "获取秒杀商品列表"
 	@handler GetSeckillProducts
@@ -206,6 +205,26 @@ service api {
 	@doc "提交秒杀订单"
 	@handler PlaceSeckillOrder
 	post /order (SeckillOrderReq) returns (SeckillOrderResp)
+}
+
+// ======================== 商品管理模块（管理员接口） ========================
+@server (
+	prefix: /api/v1/admin/product
+	group:  admin-product
+	jwt:    AdminAuth
+)
+service api {
+	@doc "添加商品"
+	@handler AddProduct
+	post /add (AddProductReq) returns (BaseResponse)
+
+	@doc "编辑商品"
+	@handler EditProduct
+	put /edit/:productId (EditProductReq) returns (BaseResponse)
+
+	@doc "删除商品"
+	@handler DeleteProduct
+	delete /delete/:productId (Empty) returns (BaseResponse)
 }
 
 // 用户管理相关类型
