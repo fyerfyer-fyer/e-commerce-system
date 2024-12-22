@@ -1,26 +1,25 @@
-package admin-product
+package admin_product
 
 import (
 	"net/http"
 
-	"github.com/zeromicro/go-zero/rest/httpx"
-	"github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/logic/admin-product"
+	"github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/logic/admin_product"
 	"github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/svc"
 	"github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/types"
-
+	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-// 编辑商品
-func EditProductHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+// 添加商品
+func AddProductHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.EditProductReq
+		var req types.AddProductReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := admin-product.NewEditProductLogic(r.Context(), svcCtx)
-		resp, err := l.EditProduct(&req)
+		l := admin_product.NewAddProductLogic(r.Context(), svcCtx)
+		resp, err := l.AddProduct(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

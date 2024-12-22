@@ -1,4 +1,4 @@
-package admin-product
+package admin_product
 
 import (
 	"context"
@@ -9,22 +9,22 @@ import (
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
-type DeleteProductLogic struct {
+type AddProductLogic struct {
 	logx.Logger
 	ctx    context.Context
 	svcCtx *svc.ServiceContext
 }
 
-// 删除商品
-func NewDeleteProductLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DeleteProductLogic {
-	return &DeleteProductLogic{
+// 添加商品
+func NewAddProductLogic(ctx context.Context, svcCtx *svc.ServiceContext) *AddProductLogic {
+	return &AddProductLogic{
 		Logger: logx.WithContext(ctx),
 		ctx:    ctx,
 		svcCtx: svcCtx,
 	}
 }
 
-func (l *DeleteProductLogic) DeleteProduct(req *types.Empty) (resp *types.BaseResponse, err error) {
+func (l *AddProductLogic) AddProduct(req *types.AddProductReq) (resp *types.BaseResponse, err error) {
 	// todo: add your logic here and delete this line
 
 	return

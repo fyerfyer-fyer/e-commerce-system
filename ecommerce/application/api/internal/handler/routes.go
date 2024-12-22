@@ -6,14 +6,14 @@ package handler
 import (
 	"net/http"
 
-	"github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/svc"
-	admin-product "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/admin-product"
+	admin_product "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/admin_product"
 	cart "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/cart"
 	comment "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/comment"
 	order "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/order"
 	payment "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/payment"
 	seckill "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/seckill"
 	user "github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/handler/user"
+	"github.com/fyerfyer/e-commerce-system/ecommerce/application/api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )
@@ -21,267 +21,267 @@ import (
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 添加商品
-						Method:  http.MethodPost,
-						Path:    "/add",
-						Handler: admin-product.AddProductHandler(serverCtx),
-					},
-					{
-						// 删除商品
-						Method:  http.MethodDelete,
-						Path:    "/delete/:productId",
-						Handler: admin-product.DeleteProductHandler(serverCtx),
-					},
-					{
-						// 编辑商品
-						Method:  http.MethodPut,
-						Path:    "/edit/:productId",
-						Handler: admin-product.EditProductHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.AdminAuth.AccessSecret), 
-rest.WithPrefix("/api/v1/admin/product"),  
+			{
+				// 添加商品
+				Method:  http.MethodPost,
+				Path:    "/add",
+				Handler: admin_product.AddProductHandler(serverCtx),
+			},
+			{
+				// 删除商品
+				Method:  http.MethodDelete,
+				Path:    "/delete/:productId",
+				Handler: admin_product.DeleteProductHandler(serverCtx),
+			},
+			{
+				// 编辑商品
+				Method:  http.MethodPut,
+				Path:    "/edit/:productId",
+				Handler: admin_product.EditProductHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.AdminAuth.AccessSecret),
+		rest.WithPrefix("/api/v1/admin/product"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 添加商品到购物车
-						Method:  http.MethodPost,
-						Path:    "/add",
-						Handler: cart.AddToCartHandler(serverCtx),
-					},
-					{
-						// 清空购物车
-						Method:  http.MethodDelete,
-						Path:    "/clear",
-						Handler: cart.ClearCartHandler(serverCtx),
-					},
-					{
-						// 删除购物车商品
-						Method:  http.MethodDelete,
-						Path:    "/delete/:productId",
-						Handler: cart.DeleteCartItemHandler(serverCtx),
-					},
-					{
-						// 获取购物车列表
-						Method:  http.MethodGet,
-						Path:    "/list",
-						Handler: cart.GetCartItemsHandler(serverCtx),
-					},
-					{
-						// 更新购物车商品
-						Method:  http.MethodPut,
-						Path:    "/update/:productId",
-						Handler: cart.UpdateCartItemHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.Auth.AccessSecret), 
-rest.WithPrefix("/api/v1/cart"),  
+			{
+				// 添加商品到购物车
+				Method:  http.MethodPost,
+				Path:    "/add",
+				Handler: cart.AddToCartHandler(serverCtx),
+			},
+			{
+				// 清空购物车
+				Method:  http.MethodDelete,
+				Path:    "/clear",
+				Handler: cart.ClearCartHandler(serverCtx),
+			},
+			{
+				// 删除购物车商品
+				Method:  http.MethodDelete,
+				Path:    "/delete/:productId",
+				Handler: cart.DeleteCartItemHandler(serverCtx),
+			},
+			{
+				// 获取购物车列表
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: cart.GetCartItemsHandler(serverCtx),
+			},
+			{
+				// 更新购物车商品
+				Method:  http.MethodPut,
+				Path:    "/update/:productId",
+				Handler: cart.UpdateCartItemHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1/cart"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 添加评论
-						Method:  http.MethodPost,
-						Path:    "/add",
-						Handler: comment.AddCommentHandler(serverCtx),
-					},
-					{
-						// 删除评论
-						Method:  http.MethodDelete,
-						Path:    "/delete/:commentId",
-						Handler: comment.DeleteCommentHandler(serverCtx),
-					},
-					{
-						// 编辑评论
-						Method:  http.MethodPut,
-						Path:    "/edit/:commentId",
-						Handler: comment.EditCommentHandler(serverCtx),
-					},
-					{
-						// 获取商品评论列表
-						Method:  http.MethodGet,
-						Path:    "/product/:productId",
-						Handler: comment.GetCommentsHandler(serverCtx),
-					},
-					{
-						// 获取评论的回复列表
-						Method:  http.MethodGet,
-						Path:    "/replies/:commentId",
-						Handler: comment.GetRepliesHandler(serverCtx),
-					},
-					{
-						// 添加回复
-						Method:  http.MethodPost,
-						Path:    "/replies/add",
-						Handler: comment.AddReplyHandler(serverCtx),
-					},
-					{
-						// 删除回复
-						Method:  http.MethodDelete,
-						Path:    "/replies/delete/:replyId",
-						Handler: comment.DeleteReplyHandler(serverCtx),
-					},
-					{
-						// 编辑回复
-						Method:  http.MethodPut,
-						Path:    "/replies/edit/:replyId",
-						Handler: comment.EditReplyHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.Auth.AccessSecret), 
-rest.WithPrefix("/api/v1/comment"),  
+			{
+				// 添加评论
+				Method:  http.MethodPost,
+				Path:    "/add",
+				Handler: comment.AddCommentHandler(serverCtx),
+			},
+			{
+				// 删除评论
+				Method:  http.MethodDelete,
+				Path:    "/delete/:commentId",
+				Handler: comment.DeleteCommentHandler(serverCtx),
+			},
+			{
+				// 编辑评论
+				Method:  http.MethodPut,
+				Path:    "/edit/:commentId",
+				Handler: comment.EditCommentHandler(serverCtx),
+			},
+			{
+				// 获取商品评论列表
+				Method:  http.MethodGet,
+				Path:    "/product/:productId",
+				Handler: comment.GetCommentsHandler(serverCtx),
+			},
+			{
+				// 获取评论的回复列表
+				Method:  http.MethodGet,
+				Path:    "/replies/:commentId",
+				Handler: comment.GetRepliesHandler(serverCtx),
+			},
+			{
+				// 添加回复
+				Method:  http.MethodPost,
+				Path:    "/replies/add",
+				Handler: comment.AddReplyHandler(serverCtx),
+			},
+			{
+				// 删除回复
+				Method:  http.MethodDelete,
+				Path:    "/replies/delete/:replyId",
+				Handler: comment.DeleteReplyHandler(serverCtx),
+			},
+			{
+				// 编辑回复
+				Method:  http.MethodPut,
+				Path:    "/replies/edit/:replyId",
+				Handler: comment.EditReplyHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1/comment"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 取消订单
-						Method:  http.MethodDelete,
-						Path:    "/cancel/:orderId",
-						Handler: order.CancelOrderHandler(serverCtx),
-					},
-					{
-						// 获取订单详情
-						Method:  http.MethodGet,
-						Path:    "/details/:orderId",
-						Handler: order.GetOrderDetailsHandler(serverCtx),
-					},
-					{
-						// 获取用户订单列表
-						Method:  http.MethodGet,
-						Path:    "/list",
-						Handler: order.GetUserOrdersHandler(serverCtx),
-					},
-					{
-						// 提交订单
-						Method:  http.MethodPost,
-						Path:    "/submit",
-						Handler: order.SubmitOrderHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.Auth.AccessSecret), 
-rest.WithPrefix("/api/v1/order"),  
+			{
+				// 取消订单
+				Method:  http.MethodDelete,
+				Path:    "/cancel/:orderId",
+				Handler: order.CancelOrderHandler(serverCtx),
+			},
+			{
+				// 获取订单详情
+				Method:  http.MethodGet,
+				Path:    "/details/:orderId",
+				Handler: order.GetOrderDetailsHandler(serverCtx),
+			},
+			{
+				// 获取用户订单列表
+				Method:  http.MethodGet,
+				Path:    "/list",
+				Handler: order.GetUserOrdersHandler(serverCtx),
+			},
+			{
+				// 提交订单
+				Method:  http.MethodPost,
+				Path:    "/submit",
+				Handler: order.SubmitOrderHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1/order"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 发起支付
-						Method:  http.MethodPost,
-						Path:    "/make",
-						Handler: payment.MakePaymentHandler(serverCtx),
-					},
-					{
-						// 退款请求
-						Method:  http.MethodPost,
-						Path:    "/refund",
-						Handler: payment.RefundPaymentHandler(serverCtx),
-					},
-					{
-						// 获取支付状态
-						Method:  http.MethodGet,
-						Path:    "/status/:paymentId",
-						Handler: payment.GetPaymentStatusHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.Auth.AccessSecret), 
-rest.WithPrefix("/api/v1/payment"),  
+			{
+				// 发起支付
+				Method:  http.MethodPost,
+				Path:    "/make",
+				Handler: payment.MakePaymentHandler(serverCtx),
+			},
+			{
+				// 退款请求
+				Method:  http.MethodPost,
+				Path:    "/refund",
+				Handler: payment.RefundPaymentHandler(serverCtx),
+			},
+			{
+				// 获取支付状态
+				Method:  http.MethodGet,
+				Path:    "/status/:paymentId",
+				Handler: payment.GetPaymentStatusHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1/payment"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 获取秒杀活动列表
-						Method:  http.MethodGet,
-						Path:    "/events",
-						Handler: seckill.GetSeckillEventsHandler(serverCtx),
-					},
-					{
-						// 提交秒杀订单
-						Method:  http.MethodPost,
-						Path:    "/order",
-						Handler: seckill.PlaceSeckillOrderHandler(serverCtx),
-					},
-					{
-						// 获取秒杀商品列表
-						Method:  http.MethodGet,
-						Path:    "/products",
-						Handler: seckill.GetSeckillProductsHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.Auth.AccessSecret), 
-rest.WithPrefix("/api/v1/seckill"),  
+			{
+				// 获取秒杀活动列表
+				Method:  http.MethodGet,
+				Path:    "/events",
+				Handler: seckill.GetSeckillEventsHandler(serverCtx),
+			},
+			{
+				// 提交秒杀订单
+				Method:  http.MethodPost,
+				Path:    "/order",
+				Handler: seckill.PlaceSeckillOrderHandler(serverCtx),
+			},
+			{
+				// 获取秒杀商品列表
+				Method:  http.MethodGet,
+				Path:    "/products",
+				Handler: seckill.GetSeckillProductsHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1/seckill"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 用户登录
-						Method:  http.MethodPost,
-						Path:    "/login",
-						Handler: user.LoginUserHandler(serverCtx),
-					},
-					{
-						// 用户注册
-						Method:  http.MethodPost,
-						Path:    "/register",
-						Handler: user.RegisterUserHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.none.AccessSecret), 
-rest.WithPrefix("/api/v1/user"),  
+			{
+				// 用户登录
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: user.LoginUserHandler(serverCtx),
+			},
+			{
+				// 用户注册
+				Method:  http.MethodPost,
+				Path:    "/register",
+				Handler: user.RegisterUserHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.none.AccessSecret),
+		rest.WithPrefix("/api/v1/user"),
 	)
 
 	server.AddRoutes(
 		[]rest.Route{
-					{
-						// 获取用户地址列表
-						Method:  http.MethodGet,
-						Path:    "/addresses",
-						Handler: user.GetUserAddressesHandler(serverCtx),
-					},
-					{
-						// 添加用户地址
-						Method:  http.MethodPost,
-						Path:    "/addresses",
-						Handler: user.AddUserAddressHandler(serverCtx),
-					},
-					{
-						// 编辑用户地址
-						Method:  http.MethodPut,
-						Path:    "/addresses/:addressId",
-						Handler: user.EditUserAddressHandler(serverCtx),
-					},
-					{
-						// 删除用户地址
-						Method:  http.MethodDelete,
-						Path:    "/addresses/:addressId",
-						Handler: user.DeleteUserAddressHandler(serverCtx),
-					},
-					{
-						// 获取用户信息
-						Method:  http.MethodGet,
-						Path:    "/info",
-						Handler: user.GetUserInfoHandler(serverCtx),
-					},
-					{
-						// 更新用户信息
-						Method:  http.MethodPut,
-						Path:    "/info",
-						Handler: user.UpdateUserInfoHandler(serverCtx),
-					},
-					{
-						// 获取用户登录历史
-						Method:  http.MethodGet,
-						Path:    "/login-history",
-						Handler: user.GetUserLoginHistoryHandler(serverCtx),
-					},
-}, 
- rest.WithJwt(serverCtx.Config.Auth.AccessSecret), 
-rest.WithPrefix("/api/v1/user"),  
+			{
+				// 获取用户地址列表
+				Method:  http.MethodGet,
+				Path:    "/addresses",
+				Handler: user.GetUserAddressesHandler(serverCtx),
+			},
+			{
+				// 添加用户地址
+				Method:  http.MethodPost,
+				Path:    "/addresses",
+				Handler: user.AddUserAddressHandler(serverCtx),
+			},
+			{
+				// 编辑用户地址
+				Method:  http.MethodPut,
+				Path:    "/addresses/:addressId",
+				Handler: user.EditUserAddressHandler(serverCtx),
+			},
+			{
+				// 删除用户地址
+				Method:  http.MethodDelete,
+				Path:    "/addresses/:addressId",
+				Handler: user.DeleteUserAddressHandler(serverCtx),
+			},
+			{
+				// 获取用户信息
+				Method:  http.MethodGet,
+				Path:    "/info",
+				Handler: user.GetUserInfoHandler(serverCtx),
+			},
+			{
+				// 更新用户信息
+				Method:  http.MethodPut,
+				Path:    "/info",
+				Handler: user.UpdateUserInfoHandler(serverCtx),
+			},
+			{
+				// 获取用户登录历史
+				Method:  http.MethodGet,
+				Path:    "/login-history",
+				Handler: user.GetUserLoginHistoryHandler(serverCtx),
+			},
+		},
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithPrefix("/api/v1/user"),
 	)
 }

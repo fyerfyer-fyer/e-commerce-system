@@ -210,7 +210,7 @@ service api {
 // ======================== 商品管理模块（管理员接口） ========================
 @server (
 	prefix: /api/v1/admin/product
-	group:  admin-product
+	group:  admin_product
 	jwt:    AdminAuth
 )
 service api {
