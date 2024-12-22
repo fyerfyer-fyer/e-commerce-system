@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,6 +23,9 @@ var (
 	adminCodesRows                = strings.Join(adminCodesFieldNames, ",")
 	adminCodesRowsExpectAutoSet   = strings.Join(stringx.Remove(adminCodesFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	adminCodesRowsWithPlaceHolder = strings.Join(stringx.Remove(adminCodesFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+
+	cacheUserServiceAdminCodesIdPrefix   = "cache:userService:adminCodes:id:"
+	cacheUserServiceAdminCodesCodePrefix = "cache:userService:adminCodes:code:"
 )
 
 type (
@@ -33,7 +38,7 @@ type (
 	}
 
 	defaultAdminCodesModel struct {
-		conn  sqlx.SqlConn
+		sqlc.CachedConn
 		table string
 	}
 
@@ -46,27 +51,39 @@ type (
 	}
 )
 
-func newAdminCodesModel(conn sqlx.SqlConn) *defaultAdminCodesModel {
+func newAdminCodesModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultAdminCodesModel {
 	return &defaultAdminCodesModel{
-		conn:  conn,
-		table: "`admin_codes`",
+		CachedConn: sqlc.NewConn(conn, c, opts...),
+		table:      "`admin_codes`",
 	}
 }
 
 func (m *defaultAdminCodesModel) Delete(ctx context.Context, id int64) error {
-	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, id)
+	data, err := m.FindOne(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	userServiceAdminCodesCodeKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesCodePrefix, data.Code)
+	userServiceAdminCodesIdKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesIdPrefix, id)
+	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, userServiceAdminCodesCodeKey, userServiceAdminCodesIdKey)
 	return err
 }
 
 func (m *defaultAdminCodesModel) FindOne(ctx context.Context, id int64) (*AdminCodes, error) {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", adminCodesRows, m.table)
+	userServiceAdminCodesIdKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesIdPrefix, id)
 	var resp AdminCodes
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	err := m.QueryRowCtx(ctx, &resp, userServiceAdminCodesIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
+		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", adminCodesRows, m.table)
+		return conn.QueryRowCtx(ctx, v, query, id)
+	})
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlx.ErrNotFound:
+	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -74,13 +91,19 @@ func (m *defaultAdminCodesModel) FindOne(ctx context.Context, id int64) (*AdminC
 }
 
 func (m *defaultAdminCodesModel) FindOneByCode(ctx context.Context, code string) (*AdminCodes, error) {
+	userServiceAdminCodesCodeKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesCodePrefix, code)
 	var resp AdminCodes
-	query := fmt.Sprintf("select %s from %s where `code` = ? limit 1", adminCodesRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, code)
+	err := m.QueryRowIndexCtx(ctx, &resp, userServiceAdminCodesCodeKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v any) (i any, e error) {
+		query := fmt.Sprintf("select %s from %s where `code` = ? limit 1", adminCodesRows, m.table)
+		if err := conn.QueryRowCtx(ctx, &resp, query, code); err != nil {
+			return nil, err
+		}
+		return resp.Id, nil
+	}, m.queryPrimary)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlx.ErrNotFound:
+	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -88,15 +111,37 @@ func (m *defaultAdminCodesModel) FindOneByCode(ctx context.Context, code string)
 }
 
 func (m *defaultAdminCodesModel) Insert(ctx context.Context, data *AdminCodes) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, adminCodesRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.Code, data.Used, data.ExpiredAt)
+	userServiceAdminCodesCodeKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesCodePrefix, data.Code)
+	userServiceAdminCodesIdKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesIdPrefix, data.Id)
+	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, adminCodesRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.Code, data.Used, data.ExpiredAt)
+	}, userServiceAdminCodesCodeKey, userServiceAdminCodesIdKey)
 	return ret, err
 }
 
 func (m *defaultAdminCodesModel) Update(ctx context.Context, newData *AdminCodes) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, adminCodesRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.Code, newData.Used, newData.ExpiredAt, newData.Id)
+	data, err := m.FindOne(ctx, newData.Id)
+	if err != nil {
+		return err
+	}
+
+	userServiceAdminCodesCodeKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesCodePrefix, data.Code)
+	userServiceAdminCodesIdKey := fmt.Sprintf("%s%v", cacheUserServiceAdminCodesIdPrefix, data.Id)
+	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, adminCodesRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, newData.Code, newData.Used, newData.ExpiredAt, newData.Id)
+	}, userServiceAdminCodesCodeKey, userServiceAdminCodesIdKey)
 	return err
+}
+
+func (m *defaultAdminCodesModel) formatPrimary(primary any) string {
+	return fmt.Sprintf("%s%v", cacheUserServiceAdminCodesIdPrefix, primary)
+}
+
+func (m *defaultAdminCodesModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", adminCodesRows, m.table)
+	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultAdminCodesModel) tableName() string {

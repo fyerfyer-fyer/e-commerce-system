@@ -24,7 +24,7 @@ func NewGetUserOrdersLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Get
 	}
 }
 
-func (l *GetUserOrdersLogic) GetUserOrders(req *types.PaginationReq) (resp *types.OrderListResp, err error) {
+func (l *GetUserOrdersLogic) GetUserOrders(req *types.OrdersListReq) (resp *types.OrdersListResp, err error) {
 	// todo: add your logic here and delete this line
 
 	return

@@ -12,7 +12,7 @@ import (
 // 获取用户订单列表
 func GetUserOrdersHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.PaginationReq
+		var req types.OrdersListReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return

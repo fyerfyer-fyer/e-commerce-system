@@ -12,7 +12,7 @@ import (
 // 获取用户登录历史
 func GetUserLoginHistoryHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.Empty
+		var req types.LoginHistoryReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return

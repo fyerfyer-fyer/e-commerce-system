@@ -1,3 +1,110 @@
 Name: api
 Host: 0.0.0.0
 Port: 8888
+
+# JWT认证配置
+Auth:
+  AccessSecret: your-jwt-secret-key    # JWT密钥
+  AccessExpire: 7200                   # token过期时间（秒）
+
+# 用户服务
+UserRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: user.rpc
+
+# 订单服务
+OrderRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: order.rpc
+
+# 商品服务
+ProductRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: product.rpc
+
+# 购物车服务
+CartRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: cart.rpc
+
+# 支付服务
+PaymentRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: payment.rpc
+
+# 评论服务
+CommentRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: comment.rpc
+
+# 秒杀服务
+SeckillRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: seckill.rpc
+
+# Redis配置（用于限流、缓存等）
+Redis:
+  Host: 127.0.0.1:6379
+  Type: node
+  Pass: 
+  Key: api-redis
+
+# 限流配置
+Middleware:
+  Limit:
+    Rate: 100                          # 每秒请求数
+    Burst: 200                         # 突发请求数
+    EnableLocalLimit: true             # 启用本地限流
+    EnableGlobalLimit: true            # 启用全局限流
+
+# 跨域配置
+CorsConfig:
+  Enable: true
+  AllowOrigins: "*"
+  AllowMethods: "GET,POST,PUT,DELETE,OPTIONS"
+  AllowHeaders: "Content-Type,Authorization"
+  ExposeHeaders: "Content-Length,Access-Control-Allow-Origin,Access-Control-Allow-Headers,Content-Type"
+  AllowCredentials: true
+
+# 日志配置
+Log:
+  ServiceName: api
+  Mode: console                        # console或file
+  Level: info                          # debug, info, error
+  Encoding: json                       # json或plain
+  TimeFormat: 2006-01-02T15:04:05Z07:00
+  Path: logs                           # 日志文件路径
+  Compress: false                      # 是否压缩
+  KeepDays: 7                         # 日志保留天数
+
+# 监控配置
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9091
+  Path: /metrics
+
+# 链路追踪配置
+Telemetry:
+  Name: api
+  Endpoint: http://jaeger:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+# 超时配置
+Timeout:
+  Rpc: 5000                           # RPC调用超时时间（毫秒）
+  Http: 10000                         # HTTP请求超时时间（毫秒）

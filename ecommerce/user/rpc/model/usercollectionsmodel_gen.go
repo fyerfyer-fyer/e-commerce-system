@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,6 +23,9 @@ var (
 	userCollectionsRows                = strings.Join(userCollectionsFieldNames, ",")
 	userCollectionsRowsExpectAutoSet   = strings.Join(stringx.Remove(userCollectionsFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	userCollectionsRowsWithPlaceHolder = strings.Join(stringx.Remove(userCollectionsFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+
+	cacheUserServiceUserCollectionsIdPrefix              = "cache:userService:userCollections:id:"
+	cacheUserServiceUserCollectionsUserIdProductIdPrefix = "cache:userService:userCollections:userId:productId:"
 )
 
 type (
@@ -33,7 +38,7 @@ type (
 	}
 
 	defaultUserCollectionsModel struct {
-		conn  sqlx.SqlConn
+		sqlc.CachedConn
 		table string
 	}
 
@@ -45,27 +50,39 @@ type (
 	}
 )
 
-func newUserCollectionsModel(conn sqlx.SqlConn) *defaultUserCollectionsModel {
+func newUserCollectionsModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultUserCollectionsModel {
 	return &defaultUserCollectionsModel{
-		conn:  conn,
-		table: "`user_collections`",
+		CachedConn: sqlc.NewConn(conn, c, opts...),
+		table:      "`user_collections`",
 	}
 }
 
 func (m *defaultUserCollectionsModel) Delete(ctx context.Context, id int64) error {
-	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, id)
+	data, err := m.FindOne(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	userServiceUserCollectionsIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserCollectionsIdPrefix, id)
+	userServiceUserCollectionsUserIdProductIdKey := fmt.Sprintf("%s%v:%v", cacheUserServiceUserCollectionsUserIdProductIdPrefix, data.UserId, data.ProductId)
+	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, userServiceUserCollectionsIdKey, userServiceUserCollectionsUserIdProductIdKey)
 	return err
 }
 
 func (m *defaultUserCollectionsModel) FindOne(ctx context.Context, id int64) (*UserCollections, error) {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userCollectionsRows, m.table)
+	userServiceUserCollectionsIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserCollectionsIdPrefix, id)
 	var resp UserCollections
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	err := m.QueryRowCtx(ctx, &resp, userServiceUserCollectionsIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
+		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userCollectionsRows, m.table)
+		return conn.QueryRowCtx(ctx, v, query, id)
+	})
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlx.ErrNotFound:
+	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -73,13 +90,19 @@ func (m *defaultUserCollectionsModel) FindOne(ctx context.Context, id int64) (*U
 }
 
 func (m *defaultUserCollectionsModel) FindOneByUserIdProductId(ctx context.Context, userId int64, productId int64) (*UserCollections, error) {
+	userServiceUserCollectionsUserIdProductIdKey := fmt.Sprintf("%s%v:%v", cacheUserServiceUserCollectionsUserIdProductIdPrefix, userId, productId)
 	var resp UserCollections
-	query := fmt.Sprintf("select %s from %s where `user_id` = ? and `product_id` = ? limit 1", userCollectionsRows, m.table)
-	err := m.conn.QueryRowCtx(ctx, &resp, query, userId, productId)
+	err := m.QueryRowIndexCtx(ctx, &resp, userServiceUserCollectionsUserIdProductIdKey, m.formatPrimary, func(ctx context.Context, conn sqlx.SqlConn, v any) (i any, e error) {
+		query := fmt.Sprintf("select %s from %s where `user_id` = ? and `product_id` = ? limit 1", userCollectionsRows, m.table)
+		if err := conn.QueryRowCtx(ctx, &resp, query, userId, productId); err != nil {
+			return nil, err
+		}
+		return resp.Id, nil
+	}, m.queryPrimary)
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlx.ErrNotFound:
+	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -87,15 +110,37 @@ func (m *defaultUserCollectionsModel) FindOneByUserIdProductId(ctx context.Conte
 }
 
 func (m *defaultUserCollectionsModel) Insert(ctx context.Context, data *UserCollections) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, userCollectionsRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.ProductId)
+	userServiceUserCollectionsIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserCollectionsIdPrefix, data.Id)
+	userServiceUserCollectionsUserIdProductIdKey := fmt.Sprintf("%s%v:%v", cacheUserServiceUserCollectionsUserIdProductIdPrefix, data.UserId, data.ProductId)
+	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?)", m.table, userCollectionsRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.UserId, data.ProductId)
+	}, userServiceUserCollectionsIdKey, userServiceUserCollectionsUserIdProductIdKey)
 	return ret, err
 }
 
 func (m *defaultUserCollectionsModel) Update(ctx context.Context, newData *UserCollections) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userCollectionsRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, newData.UserId, newData.ProductId, newData.Id)
+	data, err := m.FindOne(ctx, newData.Id)
+	if err != nil {
+		return err
+	}
+
+	userServiceUserCollectionsIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserCollectionsIdPrefix, data.Id)
+	userServiceUserCollectionsUserIdProductIdKey := fmt.Sprintf("%s%v:%v", cacheUserServiceUserCollectionsUserIdProductIdPrefix, data.UserId, data.ProductId)
+	_, err = m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userCollectionsRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, newData.UserId, newData.ProductId, newData.Id)
+	}, userServiceUserCollectionsIdKey, userServiceUserCollectionsUserIdProductIdKey)
 	return err
+}
+
+func (m *defaultUserCollectionsModel) formatPrimary(primary any) string {
+	return fmt.Sprintf("%s%v", cacheUserServiceUserCollectionsIdPrefix, primary)
+}
+
+func (m *defaultUserCollectionsModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userCollectionsRows, m.table)
+	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultUserCollectionsModel) tableName() string {

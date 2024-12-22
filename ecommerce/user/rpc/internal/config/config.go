@@ -7,11 +7,21 @@ import (
 
 type Config struct {
 	zrpc.RpcServerConf
+
 	Mysql struct {
 		DataSource string
 	}
+
 	CacheRedis cache.CacheConf
-	Salt       string
+	BizRedis   cache.CacheConf
 	ProductRpc zrpc.RpcClientConf
-	OrderRpc   zrpc.RpcClientConf
+	Salt       string
+	Auth       struct {
+		AccessSecret string
+		AccessExpire int64
+	}
+	Limit struct {
+		Rate  int
+		Burst int
+	}
 }

@@ -24,7 +24,7 @@ func NewGetUserLoginHistoryLogic(ctx context.Context, svcCtx *svc.ServiceContext
 	}
 }
 
-func (l *GetUserLoginHistoryLogic) GetUserLoginHistory(req *types.Empty) (resp *types.LoginHistoryResp, err error) {
+func (l *GetUserLoginHistoryLogic) GetUserLoginHistory(req *types.LoginHistoryReq) (resp *types.LoginHistoryResp, err error) {
 	// todo: add your logic here and delete this line
 
 	return

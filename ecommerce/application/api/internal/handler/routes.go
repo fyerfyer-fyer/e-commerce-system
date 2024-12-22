@@ -232,7 +232,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 				Handler: user.RegisterUserHandler(serverCtx),
 			},
 		},
-		rest.WithJwt(serverCtx.Config.none.AccessSecret),
+		rest.WithJwt(serverCtx.Config.None.AccessSecret),
 		rest.WithPrefix("/api/v1/user"),
 	)
 

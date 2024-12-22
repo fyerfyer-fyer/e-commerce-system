@@ -34,6 +34,8 @@ type (
 	LoginHistoryEntry        = user.LoginHistoryEntry
 	LoginRequest             = user.LoginRequest
 	LoginResponse            = user.LoginResponse
+	PaginationRequest        = user.PaginationRequest
+	PaginationResponse       = user.PaginationResponse
 	RegisterRequest          = user.RegisterRequest
 	RegisterResponse         = user.RegisterResponse
 	SetDefaultAddressRequest = user.SetDefaultAddressRequest

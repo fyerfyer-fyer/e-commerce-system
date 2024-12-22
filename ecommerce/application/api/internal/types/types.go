@@ -180,17 +180,18 @@ type GetProductDetailResp struct {
 }
 
 type GetProductListReq struct {
-	CategoryId int64  `json:"categoryId,omitempty"` // 分类ID，可选
-	Keyword    string `json:"keyword,omitempty"`    // 搜索关键词，可选
-	Page       int    `json:"page,default=1"`       // 页码
-	PageSize   int    `json:"pageSize,default=10"`  // 每页数量
-	SortBy     string `json:"sortBy,omitempty"`     // 排序字段，例如: price, createdAt
-	Order      string `json:"order,omitempty"`      // 排序方式: asc/desc
+	PaginationReq
+	SortingReq
+	CategoryId int64   `json:"categoryId,optional"` // 分类ID
+	Keyword    string  `json:"keyword,optional"`    // 搜索关键词
+	MinPrice   float64 `json:"minPrice,optional"`   // 最小价格
+	MaxPrice   float64 `json:"maxPrice,optional"`   // 最大价格
+	InStock    *bool   `json:"inStock,optional"`    // 是否有库存
 }
 
 type GetProductListResp struct {
-	Products []ProductSummary `json:"products"` // 商品摘要列表
-	Total    int              `json:"total"`    // 总数
+	Products   []ProductSummary `json:"products"`
+	Pagination PaginationResp   `json:"pagination"`
 }
 
 type GetRepliesReq struct {
@@ -226,8 +227,16 @@ type LoginHistoryEntry struct {
 	LoginIp   string `json:"loginIp"`   // 登录IP地址
 }
 
+type LoginHistoryReq struct {
+	PaginationReq
+	SortingReq
+	TimeRangeFilter
+	LoginIp string `json:"loginIp,optional"` // IP地址过滤
+}
+
 type LoginHistoryResp struct {
-	History []LoginHistoryEntry `json:"history"` // 登录历史记录列表
+	History    []LoginHistoryEntry `json:"history"`
+	Pagination PaginationResp      `json:"pagination"`
 }
 
 type LoginReq struct {
@@ -271,6 +280,15 @@ type OrderDetailsResp struct {
 	Order OrderDetails `json:"order"` // 订单详情
 }
 
+type OrderFilter struct {
+	TimeRangeFilter
+	Status         string   `json:"status,optional"`
+	MinAmount      float64  `json:"minAmount,optional"`
+	MaxAmount      float64  `json:"maxAmount,optional"`
+	PaymentMethods []string `json:"paymentMethods,optional"`
+	PaymentStatus  string   `json:"paymentStatus,optional"`
+}
+
 type OrderItemReq struct {
 	ProductId int64 `json:"productId"` // 商品ID
 	Quantity  int   `json:"quantity"`  // 购买数量
@@ -284,10 +302,6 @@ type OrderItemResp struct {
 	Total     float64 `json:"total"`     // 商品小计
 }
 
-type OrderListResp struct {
-	Orders []OrderResp `json:"orders"` // 订单列表
-}
-
 type OrderResp struct {
 	Id          int64   `json:"id"`          // 订单ID
 	OrderNumber string  `json:"orderNumber"` // 订单编号
@@ -296,9 +310,26 @@ type OrderResp struct {
 	CreatedAt   string  `json:"createdAt"`   // 订单创建时间
 }
 
+type OrdersListReq struct {
+	PaginationReq
+	SortingReq
+	OrderFilter
+}
+
+type OrdersListResp struct {
+	Orders     []OrderResp    `json:"orders"`
+	Pagination PaginationResp `json:"pagination"`
+}
+
 type PaginationReq struct {
 	Page     int `json:"page,default=1"`      // Page number
 	PageSize int `json:"pageSize,default=10"` // Page size
+}
+
+type PaginationResp struct {
+	Total       int `json:"total"`       // 总记录数
+	TotalPages  int `json:"totalPages"`  // 总页数
+	CurrentPage int `json:"currentPage"` // 当前页码
 }
 
 type PaymentResp struct {
@@ -405,6 +436,11 @@ type SelectCartItemsReq struct {
 	Selected   bool    `json:"selected"`   // 是否选中
 }
 
+type SortingReq struct {
+	SortField string `json:"sortField,optional"`                  // 排序字段
+	SortOrder string `json:"sortOrder,optional,options=asc|desc"` // 排序方向
+}
+
 type SubmitOrderReq struct {
 	UserId    int64          `json:"userId"`    // 用户ID
 	AddressId int64          `json:"addressId"` // 收货地址ID
@@ -413,6 +449,11 @@ type SubmitOrderReq struct {
 
 type SubmitOrderResp struct {
 	OrderId int64 `json:"orderId"` // 订单ID
+}
+
+type TimeRangeFilter struct {
+	StartTime string `json:"startTime,optional"` // 开始时间
+	EndTime   string `json:"endTime,optional"`   // 结束时间
 }
 
 type UpdateCartReq struct {

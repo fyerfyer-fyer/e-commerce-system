@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,6 +23,8 @@ var (
 	loginHistoryRows                = strings.Join(loginHistoryFieldNames, ",")
 	loginHistoryRowsExpectAutoSet   = strings.Join(stringx.Remove(loginHistoryFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	loginHistoryRowsWithPlaceHolder = strings.Join(stringx.Remove(loginHistoryFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+
+	cacheUserServiceLoginHistoryIdPrefix = "cache:userService:loginHistory:id:"
 )
 
 type (
@@ -32,7 +36,7 @@ type (
 	}
 
 	defaultLoginHistoryModel struct {
-		conn  sqlx.SqlConn
+		sqlc.CachedConn
 		table string
 	}
 
@@ -44,27 +48,33 @@ type (
 	}
 )
 
-func newLoginHistoryModel(conn sqlx.SqlConn) *defaultLoginHistoryModel {
+func newLoginHistoryModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultLoginHistoryModel {
 	return &defaultLoginHistoryModel{
-		conn:  conn,
-		table: "`login_history`",
+		CachedConn: sqlc.NewConn(conn, c, opts...),
+		table:      "`login_history`",
 	}
 }
 
 func (m *defaultLoginHistoryModel) Delete(ctx context.Context, id int64) error {
-	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, id)
+	userServiceLoginHistoryIdKey := fmt.Sprintf("%s%v", cacheUserServiceLoginHistoryIdPrefix, id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, userServiceLoginHistoryIdKey)
 	return err
 }
 
 func (m *defaultLoginHistoryModel) FindOne(ctx context.Context, id int64) (*LoginHistory, error) {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", loginHistoryRows, m.table)
+	userServiceLoginHistoryIdKey := fmt.Sprintf("%s%v", cacheUserServiceLoginHistoryIdPrefix, id)
 	var resp LoginHistory
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	err := m.QueryRowCtx(ctx, &resp, userServiceLoginHistoryIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
+		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", loginHistoryRows, m.table)
+		return conn.QueryRowCtx(ctx, v, query, id)
+	})
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlx.ErrNotFound:
+	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -72,15 +82,30 @@ func (m *defaultLoginHistoryModel) FindOne(ctx context.Context, id int64) (*Logi
 }
 
 func (m *defaultLoginHistoryModel) Insert(ctx context.Context, data *LoginHistory) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, loginHistoryRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.LoginTime, data.LoginIp)
+	userServiceLoginHistoryIdKey := fmt.Sprintf("%s%v", cacheUserServiceLoginHistoryIdPrefix, data.Id)
+	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?)", m.table, loginHistoryRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.UserId, data.LoginTime, data.LoginIp)
+	}, userServiceLoginHistoryIdKey)
 	return ret, err
 }
 
 func (m *defaultLoginHistoryModel) Update(ctx context.Context, data *LoginHistory) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, loginHistoryRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.LoginTime, data.LoginIp, data.Id)
+	userServiceLoginHistoryIdKey := fmt.Sprintf("%s%v", cacheUserServiceLoginHistoryIdPrefix, data.Id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, loginHistoryRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, data.UserId, data.LoginTime, data.LoginIp, data.Id)
+	}, userServiceLoginHistoryIdKey)
 	return err
+}
+
+func (m *defaultLoginHistoryModel) formatPrimary(primary any) string {
+	return fmt.Sprintf("%s%v", cacheUserServiceLoginHistoryIdPrefix, primary)
+}
+
+func (m *defaultLoginHistoryModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", loginHistoryRows, m.table)
+	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultLoginHistoryModel) tableName() string {

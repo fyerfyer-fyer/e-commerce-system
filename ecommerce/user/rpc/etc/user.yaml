@@ -1,40 +1,45 @@
 Name: user.rpc
-ListenOn: 0.0.0.0:9001
+ListenOn: 0.0.0.0:9001  # 使用0.0.0.0允许外部访问
 Mode: dev
+
+# Etcd服务发现配置
 Etcd:
   Hosts:
     - 127.0.0.1:2379
   Key: user.rpc
 
+# MySQL配置，使用docker容器的地址
 Mysql:
   DataSource: root:123456@tcp(172.17.0.2:3306)/user_service?charset=utf8mb4&parseTime=true&loc=Asia%2FShanghai
 
+# Redis缓存配置
 CacheRedis:
   - Host: 127.0.0.1:6379
     Type: node
     Pass:
 
-Salt: HWVOFkGgPTryzICwd7qnJaZR9KQ2i8xe
+# 业务Redis配置（用于存储登录token等）
+BizRedis:
+  - Host: 127.0.0.1:6379
+    Type: node
+    Pass:
 
-Prometheus:
-  Host: 0.0.0.0
-  Port: 9081
-  Path: /metrics
-
-Telemetry:
-  Name: user.rpc
-  Endpoint: http://jaeger:14268/api/traces
-  Sampler: 1.0
-  Batcher: jaeger
-
+# 需要调用的其他服务
 ProductRpc:
   Etcd:
     Hosts:
       - 127.0.0.1:2379
     Key: product.rpc
 
-OrderRpc:
-  Etcd:
-    Hosts:
-      - 127.0.0.1:2379
-    Key: order.rpc
+# 用户密码加密盐值
+Salt: HWVOFkGgPTryzICwd7qnJaZR9KQ2i8xe
+
+# JWT配置
+Auth:
+  AccessSecret: your-access-secret-key
+  AccessExpire: 7200  # token过期时间，单位秒
+
+# 限流配置（可选）
+Limit:
+  Rate: 100
+  Burst: 200

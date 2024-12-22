@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"github.com/zeromicro/go-zero/core/stores/builder"
+	"github.com/zeromicro/go-zero/core/stores/cache"
+	"github.com/zeromicro/go-zero/core/stores/sqlc"
 	"github.com/zeromicro/go-zero/core/stores/sqlx"
 	"github.com/zeromicro/go-zero/core/stringx"
 )
@@ -21,6 +23,8 @@ var (
 	userAddressesRows                = strings.Join(userAddressesFieldNames, ",")
 	userAddressesRowsExpectAutoSet   = strings.Join(stringx.Remove(userAddressesFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), ",")
 	userAddressesRowsWithPlaceHolder = strings.Join(stringx.Remove(userAddressesFieldNames, "`id`", "`create_at`", "`create_time`", "`created_at`", "`update_at`", "`update_time`", "`updated_at`"), "=?,") + "=?"
+
+	cacheUserServiceUserAddressesIdPrefix = "cache:userService:userAddresses:id:"
 )
 
 type (
@@ -32,7 +36,7 @@ type (
 	}
 
 	defaultUserAddressesModel struct {
-		conn  sqlx.SqlConn
+		sqlc.CachedConn
 		table string
 	}
 
@@ -51,27 +55,33 @@ type (
 	}
 )
 
-func newUserAddressesModel(conn sqlx.SqlConn) *defaultUserAddressesModel {
+func newUserAddressesModel(conn sqlx.SqlConn, c cache.CacheConf, opts ...cache.Option) *defaultUserAddressesModel {
 	return &defaultUserAddressesModel{
-		conn:  conn,
-		table: "`user_addresses`",
+		CachedConn: sqlc.NewConn(conn, c, opts...),
+		table:      "`user_addresses`",
 	}
 }
 
 func (m *defaultUserAddressesModel) Delete(ctx context.Context, id int64) error {
-	query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
-	_, err := m.conn.ExecCtx(ctx, query, id)
+	userServiceUserAddressesIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserAddressesIdPrefix, id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("delete from %s where `id` = ?", m.table)
+		return conn.ExecCtx(ctx, query, id)
+	}, userServiceUserAddressesIdKey)
 	return err
 }
 
 func (m *defaultUserAddressesModel) FindOne(ctx context.Context, id int64) (*UserAddresses, error) {
-	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userAddressesRows, m.table)
+	userServiceUserAddressesIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserAddressesIdPrefix, id)
 	var resp UserAddresses
-	err := m.conn.QueryRowCtx(ctx, &resp, query, id)
+	err := m.QueryRowCtx(ctx, &resp, userServiceUserAddressesIdKey, func(ctx context.Context, conn sqlx.SqlConn, v any) error {
+		query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userAddressesRows, m.table)
+		return conn.QueryRowCtx(ctx, v, query, id)
+	})
 	switch err {
 	case nil:
 		return &resp, nil
-	case sqlx.ErrNotFound:
+	case sqlc.ErrNotFound:
 		return nil, ErrNotFound
 	default:
 		return nil, err
@@ -79,15 +89,30 @@ func (m *defaultUserAddressesModel) FindOne(ctx context.Context, id int64) (*Use
 }
 
 func (m *defaultUserAddressesModel) Insert(ctx context.Context, data *UserAddresses) (sql.Result, error) {
-	query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, userAddressesRowsExpectAutoSet)
-	ret, err := m.conn.ExecCtx(ctx, query, data.UserId, data.AddressLine1, data.AddressLine2, data.City, data.State, data.PostalCode, data.Country, data.IsDefault)
+	userServiceUserAddressesIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserAddressesIdPrefix, data.Id)
+	ret, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("insert into %s (%s) values (?, ?, ?, ?, ?, ?, ?, ?)", m.table, userAddressesRowsExpectAutoSet)
+		return conn.ExecCtx(ctx, query, data.UserId, data.AddressLine1, data.AddressLine2, data.City, data.State, data.PostalCode, data.Country, data.IsDefault)
+	}, userServiceUserAddressesIdKey)
 	return ret, err
 }
 
 func (m *defaultUserAddressesModel) Update(ctx context.Context, data *UserAddresses) error {
-	query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userAddressesRowsWithPlaceHolder)
-	_, err := m.conn.ExecCtx(ctx, query, data.UserId, data.AddressLine1, data.AddressLine2, data.City, data.State, data.PostalCode, data.Country, data.IsDefault, data.Id)
+	userServiceUserAddressesIdKey := fmt.Sprintf("%s%v", cacheUserServiceUserAddressesIdPrefix, data.Id)
+	_, err := m.ExecCtx(ctx, func(ctx context.Context, conn sqlx.SqlConn) (result sql.Result, err error) {
+		query := fmt.Sprintf("update %s set %s where `id` = ?", m.table, userAddressesRowsWithPlaceHolder)
+		return conn.ExecCtx(ctx, query, data.UserId, data.AddressLine1, data.AddressLine2, data.City, data.State, data.PostalCode, data.Country, data.IsDefault, data.Id)
+	}, userServiceUserAddressesIdKey)
 	return err
+}
+
+func (m *defaultUserAddressesModel) formatPrimary(primary any) string {
+	return fmt.Sprintf("%s%v", cacheUserServiceUserAddressesIdPrefix, primary)
+}
+
+func (m *defaultUserAddressesModel) queryPrimary(ctx context.Context, conn sqlx.SqlConn, v, primary any) error {
+	query := fmt.Sprintf("select %s from %s where `id` = ? limit 1", userAddressesRows, m.table)
+	return conn.QueryRowCtx(ctx, v, query, primary)
 }
 
 func (m *defaultUserAddressesModel) tableName() string {

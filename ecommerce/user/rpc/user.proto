@@ -6,14 +6,24 @@ option go_package = "./user";
 
 message Empty {}
 
+message PaginationRequest {
+    int32 page = 1;        // 页码，从1开始
+    int32 page_size = 2;   // 每页数量
+}
+
+message PaginationResponse {
+    int32 total = 1;       // 总记录数
+    int32 total_pages = 2; // 总页数
+    int32 current_page = 3;// 当前页码
+}
+
 message RegisterRequest {
     string username = 1;
     string password = 2;
     string email = 3;
     string phone = 4;
     string avatar = 5;
-    Address address = 6;
-    string admin_code=7;
+    string admin_code=6;
 }
 
 message RegisterResponse {
@@ -70,7 +80,13 @@ message SetDefaultAddressRequest {
 }
 
 message GetLoginHistoryRequest {
-    int64 userId = 1;
+    int64 user_id = 1;
+    PaginationRequest pagination = 2;
+    string start_time = 3;     // 开始时间过滤
+    string end_time = 4;       // 结束时间过滤
+    string sort_field = 5;     // 排序字段，例如："login_time"
+    string sort_order = 6;     // 排序方向，"asc" 或 "desc"
+    string login_ip = 7;       // IP地址过滤
 }
 
 message LoginHistoryEntry {
@@ -82,7 +98,9 @@ message LoginHistoryEntry {
 
 message GetLoginHistoryResponse {
     repeated LoginHistoryEntry history = 1;
+    PaginationResponse pagination = 2;
 }
+
 
 message GetUserInfoRequest {
     int64 userId = 1; // Target user's ID
@@ -102,12 +120,16 @@ message GetUserInfoResponse {
     UserInfo user = 1;
 }
 
-message GetCollectionRequest{
-    int64 userId=1;
+message GetCollectionRequest {
+    int64 user_id = 1;
+    PaginationRequest pagination = 2;
+    string sort_field = 3;     // 排序字段，例如："created_at"
+    string sort_order = 4;     // 排序方向
 }
 
 message GetCollectionResponse {
-    repeated int64 productIds = 1;
+    repeated int64 product_ids = 1;
+    PaginationResponse pagination = 2;
 }
 
 message AddCollectionRequest {

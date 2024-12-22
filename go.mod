@@ -4,6 +4,7 @@ go 1.23.4
 
 require (
 	github.com/zeromicro/go-zero v1.7.4
+	golang.org/x/crypto v0.29.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.35.2
 )
@@ -50,6 +51,7 @@ require (
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/redis/go-redis/v9 v9.7.0 // indirect
+	github.com/rs/cors v1.11.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	go.etcd.io/etcd/api/v3 v3.5.15 // indirect
 	go.etcd.io/etcd/client/pkg/v3 v3.5.15 // indirect

@@ -23,8 +23,13 @@ type (
 	GetOrdersRequest      = order.GetOrdersRequest
 	GetOrdersResponse     = order.GetOrdersResponse
 	Order                 = order.Order
+	OrderFilter           = order.OrderFilter
 	OrderItem             = order.OrderItem
+	PaginationRequest     = order.PaginationRequest
+	PaginationResponse    = order.PaginationResponse
 	PaymentInfo           = order.PaymentInfo
+	SearchOrdersRequest   = order.SearchOrdersRequest
+	SearchOrdersResponse  = order.SearchOrdersResponse
 	SubmitOrderRequest    = order.SubmitOrderRequest
 	SubmitOrderResponse   = order.SubmitOrderResponse
 
@@ -35,6 +40,7 @@ type (
 		EditOrder(ctx context.Context, in *EditOrderRequest, opts ...grpc.CallOption) (*Empty, error)
 		DeleteOrder(ctx context.Context, in *DeleteOrderRequest, opts ...grpc.CallOption) (*Empty, error)
 		GetOrderItems(ctx context.Context, in *GetOrderItemsRequest, opts ...grpc.CallOption) (*GetOrderItemsResponse, error)
+		SearchOrders(ctx context.Context, in *SearchOrdersRequest, opts ...grpc.CallOption) (*SearchOrdersResponse, error)
 	}
 
 	defaultOrders struct {
@@ -76,4 +82,9 @@ func (m *defaultOrders) DeleteOrder(ctx context.Context, in *DeleteOrderRequest,
 func (m *defaultOrders) GetOrderItems(ctx context.Context, in *GetOrderItemsRequest, opts ...grpc.CallOption) (*GetOrderItemsResponse, error) {
 	client := order.NewOrdersClient(m.cli.Conn())
 	return client.GetOrderItems(ctx, in, opts...)
+}
+
+func (m *defaultOrders) SearchOrders(ctx context.Context, in *SearchOrdersRequest, opts ...grpc.CallOption) (*SearchOrdersResponse, error) {
+	client := order.NewOrdersClient(m.cli.Conn())
+	return client.SearchOrders(ctx, in, opts...)
 }

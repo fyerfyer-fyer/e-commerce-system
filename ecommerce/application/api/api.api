@@ -20,6 +20,19 @@ type (
 		page     int `json:"page,default=1"` // Page number
 		pageSize int `json:"pageSize,default=10"` // Page size
 	}
+	SortingReq {
+		sortField string `json:"sortField,optional"` // 排序字段
+		sortOrder string `json:"sortOrder,optional,options=asc|desc"` // 排序方向
+	}
+	TimeRangeFilter {
+		startTime string `json:"startTime,optional"` // 开始时间
+		endTime   string `json:"endTime,optional"` // 结束时间
+	}
+	PaginationResp {
+		total       int `json:"total"` // 总记录数
+		totalPages  int `json:"totalPages"` // 总页数
+		currentPage int `json:"currentPage"` // 当前页码
+	}
 )
 
 // ======================== 用户管理模块 ========================
@@ -27,7 +40,7 @@ type (
 @server (
 	prefix: /api/v1/user
 	group:  user
-	jwt:    none
+	jwt:    None
 )
 service api {
 	@doc "用户注册"
@@ -72,7 +85,7 @@ service api {
 
 	@doc "获取用户登录历史"
 	@handler GetUserLoginHistory
-	get /login-history (Empty) returns (LoginHistoryResp)
+	get /login-history (LoginHistoryReq) returns (LoginHistoryResp)
 }
 
 // ======================== 购物车管理模块 ========================
@@ -116,7 +129,7 @@ service api {
 
 	@doc "获取用户订单列表"
 	@handler GetUserOrders
-	get /list (PaginationReq) returns (OrderListResp)
+	get /list (OrdersListReq) returns (OrdersListResp)
 
 	@doc "获取订单详情"
 	@handler GetOrderDetails
@@ -305,8 +318,15 @@ type (
 		isDefault bool   `json:"isDefault"` // 是否默认
 	}
 	// 登录历史响应
+	LoginHistoryReq {
+		PaginationReq
+		SortingReq
+		TimeRangeFilter
+		loginIp string `json:"loginIp,optional"` // IP地址过滤
+	}
 	LoginHistoryResp {
-		history []LoginHistoryEntry `json:"history"` // 登录历史记录列表
+		history    []LoginHistoryEntry `json:"history"`
+		pagination PaginationResp      `json:"pagination"`
 	}
 	// 登录历史记录
 	LoginHistoryEntry {
@@ -333,9 +353,22 @@ type (
 	SubmitOrderResp {
 		orderId int64 `json:"orderId"` // 订单ID
 	}
-	// 获取订单列表响应
-	OrderListResp {
-		orders []OrderResp `json:"orders"` // 订单列表
+	OrderFilter {
+		TimeRangeFilter
+		status         string   `json:"status,optional"`
+		minAmount      float64  `json:"minAmount,optional"`
+		maxAmount      float64  `json:"maxAmount,optional"`
+		paymentMethods []string `json:"paymentMethods,optional"`
+		paymentStatus  string   `json:"paymentStatus,optional"`
+	}
+	OrdersListReq {
+		PaginationReq
+		SortingReq
+		OrderFilter
+	}
+	OrdersListResp {
+		orders     []OrderResp    `json:"orders"`
+		pagination PaginationResp `json:"pagination"`
 	}
 	// 单个订单信息
 	OrderResp {
@@ -384,17 +417,17 @@ type (
 type (
 	// 获取商品列表请求
 	GetProductListReq {
-		categoryId int64  `json:"categoryId,omitempty"` // 分类ID，可选
-		keyword    string `json:"keyword,omitempty"` // 搜索关键词，可选
-		page       int    `json:"page,default=1"` // 页码
-		pageSize   int    `json:"pageSize,default=10"` // 每页数量
-		sortBy     string `json:"sortBy,omitempty"` // 排序字段，例如: price, createdAt
-		order      string `json:"order,omitempty"` // 排序方式: asc/desc
+		PaginationReq
+		SortingReq
+		categoryId int64   `json:"categoryId,optional"` // 分类ID
+		keyword    string  `json:"keyword,optional"` // 搜索关键词
+		minPrice   float64 `json:"minPrice,optional"` // 最小价格
+		maxPrice   float64 `json:"maxPrice,optional"` // 最大价格
+		inStock    *bool   `json:"inStock,optional"` // 是否有库存
 	}
-	// 获取商品列表响应
 	GetProductListResp {
-		products []ProductSummary `json:"products"` // 商品摘要列表
-		total    int              `json:"total"` // 总数
+		products   []ProductSummary `json:"products"`
+		pagination PaginationResp   `json:"pagination"`
 	}
 	// 商品摘要信息
 	ProductSummary {

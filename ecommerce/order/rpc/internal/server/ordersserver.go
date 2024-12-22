@@ -52,3 +52,8 @@ func (s *OrdersServer) GetOrderItems(ctx context.Context, in *order.GetOrderItem
 	l := logic.NewGetOrderItemsLogic(ctx, s.svcCtx)
 	return l.GetOrderItems(in)
 }
+
+func (s *OrdersServer) SearchOrders(ctx context.Context, in *order.SearchOrdersRequest) (*order.SearchOrdersResponse, error) {
+	l := logic.NewSearchOrdersLogic(ctx, s.svcCtx)
+	return l.SearchOrders(in)
+}
